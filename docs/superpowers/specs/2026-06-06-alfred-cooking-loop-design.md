@@ -77,24 +77,26 @@ plan tweaks). No twenty-questions.
    `fast`/`batch`/`play` + time estimate + one line of reasoning (what it uses up,
    whose craving, protein anchor, what technique it teaches)
 6. One round of live tweaks ("swap Tuesday, no fish") → locked
-7. Alfred posts to Discord:
-   - **① "The Week"** — day-by-day summary → **pinned** (previous week's pin replaced)
-   - **② One message per dinner** — full stove-ready recipe (ingredients + steps,
+7. Alfred posts to `#meal-plan`, in this order so the channel always opens on the
+   current week:
+   - **① One message per dinner** — full stove-ready recipe (ingredients + steps,
      scannable on a phone; respect Discord's 2000-char limit, split if needed)
-   - **③ Cart-ready Woolworths list** — consolidated, de-duped, real product names +
+   - **② Cart-ready Woolworths list** — consolidated, de-duped, real product names +
      pack sizes + quantities; staples excluded unless flagged low
+   - **③ "The Week"** — day-by-day summary, posted last = always the newest message
 8. Mike orders in the Woolworths app (~2 min), picks the delivery/pickup slot
 
 ## During the week
 
-- **Cooking a night:** open Discord → pinned plan → tonight's recipe message →
-  cook from the phone. Recipes are pre-posted at planning time precisely so this
-  works without Mike or a laptop.
-- **Verdicts (the learning signal):** react on the recipe message — 🔥 banger /
-  👍 fine / 👎 no repeat — or a one-line reply for nuance ("banger, less salt").
-  Verdicts land in the cookbook; bangers join the favorites rotation
+- **Cooking a night:** open `#meal-plan` → newest message is the week summary →
+  tap up to tonight's recipe → cook from the phone. Recipes are pre-posted at
+  planning time precisely so this works without Mike or a laptop.
+- **Verdicts (the learning signal):** say it in `#alfred`, any phrasing — *"pad thai
+  was a banger, less salt next time"*. No format required; Alfred parses at harvest.
+  (Reactions are invisible to Alfred — verified — so verdicts are words, not emoji
+  taps.) Verdicts land in the cookbook; bangers join the favorites rotation
   (resurface ~monthly), failures don't repeat, gf's tastes get learned too.
-- **Cravings/notes anytime:** type into the channel; harvested next ritual.
+- **Cravings/notes anytime:** type into `#alfred`; harvested next ritual.
 - **Swaps are free:** plans are suggestions, not contracts. Skipped meals need no
   bookkeeping — unused ingredients appear in next week's photo and get re-planned
   (self-healing via ephemeral inventory).
@@ -115,19 +117,39 @@ persistent — opposite treatments, on purpose.
 
 ## Discord conventions
 
-- **One channel** in a shared server, e.g. `#alfred`. No multi-channel structure —
-  two people need zero friction, not organization.
-- Alfred reads the channel at planning time only (v1). **It is an inbox, not a live
-  bot** — gf's messages are not answered in real time. That friction maturing is the
-  trigger for v2/v3 conversational upgrades.
-- Current weekly plan is always the pinned message.
+Two channels in a small private server, one job each. (The MCP cannot pin or edit
+messages — verified — and mobile Discord buries pins anyway, so "latest message in
+a quiet channel" is the UX anchor instead of pinning.)
 
-### To verify during implementation (fallbacks defined, non-blocking)
+- **`#alfred`** — humans talk here: cravings, notes, fridge photo, verdicts. Read
+  by Alfred at planning time only (v1). **It is an inbox, not a live bot** —
+  messages are not answered in real time. That friction maturing is the trigger
+  for v2/v3 conversational upgrades.
+- **`#meal-plan`** — Alfred-only posts: recipes → Woolies list → week summary
+  (newest). The plan can never get buried under chat.
 
-1. Can Alfred read **image attachments** from the channel? Fallback: photo pasted
-   into the Claude Code session.
-2. Can Alfred read **reactions**? Fallback: verdicts as one-line replies to the
-   recipe message.
+### Verified capabilities (checked 2026-06-06 against the live MCP)
+
+discord-mcp is Playwright-based — it drives Discord's web app as a logged-in user
+(env: `DISCORD_EMAIL`/`DISCORD_PASSWORD`), not the bot API. Toolset: list
+servers/channels, read messages, send message. Weekly cadence keeps that fragility
+class acceptable.
+
+- ✅ Connects; reads message content + author + timestamp
+- ✅ `attachments` field present in payloads — photo-via-Discord plausible; one live
+  test with a real image remains (fallback unchanged: paste photo into the session)
+- ❌ Reactions not exposed → verdicts are written messages (see During the week)
+- ❌ No pin/edit → two-channel layout (above)
+
+### Setup required before the first ritual
+
+1. Create a private Discord server with `#alfred` + `#meal-plan`; both partners join.
+   (The connected account currently only sees a community server — no couple space
+   exists yet.)
+2. Decide posting identity: Alfred posts as whatever account `DISCORD_EMAIL` belongs
+   to. If that's Mike's main, consider a dedicated free "Alfred" account (messages
+   visibly from *Alfred*) and invite it to the server.
+3. ~~Install Playwright browser for the MCP~~ — done 2026-06-06.
 
 ## Groceries (Woolworths + Everyday Rewards)
 
