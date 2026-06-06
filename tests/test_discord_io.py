@@ -27,3 +27,7 @@ def test_hard_split_when_no_newline():
 
 def test_empty_text_returns_no_chunks():
     assert split_message("") == []
+
+
+def test_exactly_limit_is_single_chunk():
+    assert split_message("x" * 2000) == ["x" * 2000]

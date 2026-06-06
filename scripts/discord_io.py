@@ -14,6 +14,8 @@ import json
 import os
 import pathlib
 import sys
+import time
+import urllib.error
 import urllib.request
 
 API = "https://discord.com/api/v10"
@@ -28,11 +30,12 @@ def load_env() -> None:
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 key, value = line.split("=", 1)
-                os.environ.setdefault(key.strip(), value.strip())
+                value = value.strip().split(" #")[0].strip().strip("\"'")
+                os.environ.setdefault(key.strip(), value)
 
 
-def request(method: str, path: str, payload: dict | None = None):
-    req = urllib.request.Request(
+def _build_request(method: str, path: str, payload: dict | None = None):
+    return urllib.request.Request(
         API + path,
         data=json.dumps(payload).encode() if payload else None,
         headers={
@@ -42,8 +45,31 @@ def request(method: str, path: str, payload: dict | None = None):
         },
         method=method,
     )
-    with urllib.request.urlopen(req) as resp:
-        return json.load(resp)
+
+
+def request(method: str, path: str, payload: dict | None = None):
+    req = _build_request(method, path, payload)
+    try:
+        with urllib.request.urlopen(req) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError as e:
+        body = e.read()
+        if e.code == 429:
+            try:
+                retry_after = json.loads(body).get("retry_after", 2.0)
+            except Exception:
+                retry_after = 2.0
+            time.sleep(float(retry_after))
+            req2 = _build_request(method, path, payload)
+            try:
+                with urllib.request.urlopen(req2) as resp:
+                    return json.load(resp)
+            except urllib.error.HTTPError as e2:
+                body2 = e2.read()
+                print(f"HTTP {e2.code}: {body2.decode(errors='replace')}", file=sys.stderr)
+                sys.exit(1)
+        print(f"HTTP {e.code}: {body.decode(errors='replace')}", file=sys.stderr)
+        sys.exit(1)
 
 
 def split_message(text: str, limit: int = MAX_LEN) -> list[str]:
@@ -61,7 +87,10 @@ def split_message(text: str, limit: int = MAX_LEN) -> list[str]:
 
 
 def channel_id(name: str) -> str:
-    config = json.loads((ROOT / "config.json").read_text())
+    config_path = ROOT / "config.json"
+    if not config_path.exists():
+        sys.exit("config.json not found — run from repo root (see Task 3 setup)")
+    config = json.loads(config_path.read_text())
     cid = config["channels"].get(name, "")
     if not cid:
         sys.exit(f"config.json has no id for channel '{name}' — run Task 3 setup")
@@ -89,12 +118,11 @@ def cmd_read(args) -> None:
 def cmd_post(args) -> None:
     content = args.content if args.content is not None else sys.stdin.read()
     chunks = split_message(content.strip())
-    for chunk in chunks:
-        request(
-            "POST",
-            f"/channels/{channel_id(args.channel)}/messages",
-            {"content": chunk},
-        )
+    cid = channel_id(args.channel)
+    for i, chunk in enumerate(chunks):
+        if i > 0:
+            time.sleep(0.5)
+        request("POST", f"/channels/{cid}/messages", {"content": chunk})
     print(f"posted {len(chunks)} message(s) to #{args.channel}")
 
 
