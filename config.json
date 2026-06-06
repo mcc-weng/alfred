@@ -3,5 +3,9 @@
   "channels": {
     "alfred": "1512837064301871244",
     "meal-plan": "1512837048384487554"
-  }
+  },
+  "chat_model": "sonnet",
+  "ritual_model": "sonnet",
+  "debounce_seconds": 8,
+  "ritual_timeout_hours": 3
 }
