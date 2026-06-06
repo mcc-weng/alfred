@@ -47,6 +47,10 @@ def mode_args(mode: str) -> list[str]:
     if mode == "ritual":
         return ["--model", cfg.get("ritual_model", "sonnet"),
                 "--allowedTools", RITUAL_TOOLS]
+    # nudge uses the same read-only tools and chat model as chat mode
+    if mode == "nudge":
+        return ["--model", cfg.get("chat_model", "sonnet"),
+                "--allowedTools", CHAT_TOOLS]
     return ["--model", cfg.get("chat_model", "sonnet"),
             "--allowedTools", CHAT_TOOLS]
 
