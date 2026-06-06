@@ -14,6 +14,11 @@ ask at most two questions (inventory correction, plan tweaks). Never twenty-ques
   - `uv run scripts/discord_io.py read --channel alfred --limit 100`
   - `uv run scripts/discord_io.py post --channel meal-plan --content "..."`
   - long content via stdin: `cat msg.md | uv run scripts/discord_io.py post --channel meal-plan`
+- **Live daemon (v1.5):** `bash scripts/install_daemon.sh` (re)installs launchd jobs;
+  logs in `.runtime/`. Chat with Alfred in #alfred anytime; say "plan the week"
+  there to run the ritual via chat. Laptop ritual still works as fallback.
+- **Nudges:** daily 09:00 dinner reminder + Sunday 16:00 ritual prompt (silent
+  when nothing to say).
 
 ## State (all markdown, git-versioned)
 - `state/staples.md` — assumed pantry; excluded from shopping lists unless flagged low
