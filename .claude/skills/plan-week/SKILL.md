@@ -11,6 +11,10 @@ TWO questions in the whole ritual (steps 3 and 5). Bundle everything else.
 
 ## Step 1 — Harvest the channel
 Run: `uv run scripts/discord_io.py read --channel alfred --limit 100`
+Ignore messages with `bot: true`. **Cutoff:** use the newest filename in
+`state/plans/` as the cutoff date — ignore messages timestamped at or before it
+(prevents re-harvesting verdicts already logged). **First ever run** (`state/plans/`
+empty): harvest the whole window and skip Step 2 — no dishes exist to have verdicts.
 From messages since the last plan (newest file in `state/plans/`), extract:
 - **Verdicts** on last week's meals ("banger", "meh, too salty", 👎 sentiments)
 - **Cravings/requests** ("want pad thai", "something spicy")
@@ -18,13 +22,17 @@ From messages since the last plan (newest file in `state/plans/`), extract:
 - **Fridge photo** — the most recent image attachment
 
 ## Step 2 — Process verdicts FIRST
-For each verdict, append to the matching `state/cookbook/<slug>.md` under
-`## Verdicts`: `- YYYY-MM-DD: <verbatim feedback> (<who>)`. Bangers become
-rotation candidates; "no repeat" verdicts are excluded from future plans.
+List `state/cookbook/` first to resolve dish slugs. For each verdict, append to
+the matching `state/cookbook/<slug>.md` under `## Verdicts`:
+`- YYYY-MM-DD: <verbatim feedback> (<who>)`. No matching dish → it's commentary,
+not a verdict; carry it as context for the proposal, don't create a file. Bangers
+become rotation candidates; "no repeat" verdicts are excluded from future plans.
 
 ## Step 3 — Inventory (Touchpoint 1)
 Download the fridge photo: `curl -s -o /tmp/fridge.jpg "<attachment url>"`, then
 Read it. No photo in the channel? Ask Mike to paste one into the session.
+Still none handy? Proceed without inventory: plan from staples + cravings, lean
+shelf-stable, flag a likely mid-week top-up. Don't burn a touchpoint chasing it.
 List every perishable you can identify, grouped (veg / protein / dairy / other).
 Then ask ONE question: *"Anything hidden — crisper, leftovers, freezer plans?"*
 The corrected snapshot is **ephemeral**: use it for this plan, never save it.
@@ -36,9 +44,13 @@ The corrected snapshot is **ephemeral**: use it for this plan, never save it.
   🔥 banger that someone asked for
 - `state/cookbook/` — bangers not cooked in ~4 weeks are rotation candidates
 - `state/woolworths.md` — preferred products for the list
+- Allergies section empty (onboarding incomplete)? Fold "any allergies I must
+  know about?" into the Touchpoint 1 question — never propose before knowing.
 
 ## Step 5 — Propose the week (Touchpoint 2)
-Confirm dinner count (default 6), then propose the COMPLETE week in one message.
+Propose the COMPLETE week in one message, defaulting to 6 dinners — open with
+"Planned 6 dinners — say the word if this week needs fewer." Do NOT ask the count
+as a separate question.
 Per dinner: **name · mode (fast/batch/play) · ~minutes · one-line reasoning**
 (what it uses up / whose craving / protein anchor / what technique it teaches).
 Default mix 3 fast + 1 batch + 2 play. Every dinner: protein ~30–40 g/serve.
@@ -85,7 +97,7 @@ Post each via stdin to handle length:
 — Alfred 🤵
 ```
 Use `state/woolworths.md` products where known; otherwise best guess + "(or
-equivalent)". Pack-size reasoning: recipes say "1 onion", Woolies sells units —
+equivalent)". Ignore rows marked "example". Pack-size reasoning: recipes say "1 onion", Woolies sells units —
 pick the sensible purchasable size. Consolidate across recipes.
 
 ### Summary format
@@ -111,6 +123,8 @@ slot."* Then: `git add state/ && git commit -m "ritual: week of YYYY-MM-DD"`
 
 ## Hard rules
 - Allergies are absolute. Dislikes need an explicit request to override.
+- A craving that names an allergen gets silently substituted or dropped — never
+  spend a touchpoint on it, never serve it.
 - Fridge inventory NEVER persists anywhere.
 - Don't exceed two questions. Don't post to #alfred (that's the humans' channel —
   v1 Alfred only posts to #meal-plan).
