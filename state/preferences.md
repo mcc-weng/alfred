@@ -5,10 +5,12 @@
 - Gf
 
 ## Allergies / hard nos
-<!-- filled at onboarding (Task 5) -->
+- None (confirmed 2026-06-07)
 
 ## Dislikes (soft — avoid unless asked)
-<!-- filled at onboarding (Task 5) -->
+- Mike: eggplant
+- Gf: coriander, celery, century egg (皮蛋)
+- Gf: fish — ONLY salmon is OK; prawns OK; other seafood unconfirmed
 
 ## Nutrition defaults
 - Every dinner anchored on a protein source, ~30–40 g/serve
