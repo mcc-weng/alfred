@@ -130,3 +130,19 @@ slot."* Then: `git add state/ && git commit -m "ritual: week of YYYY-MM-DD"`
   v1 Alfred only posts to #meal-plan).
 - If `discord_io.py` fails, finish the ritual in-session and give Mike the posts
   as copy-paste blocks. Degraded beats broken.
+
+## Discord mode (v1.5 — when invoked headlessly by the listener)
+You are running inside `claude -p`, triggered from the #alfred channel. Differences:
+- Your stdout IS your #alfred reply. Plain text, no markdown headers.
+- Touchpoints: ask the question as your reply, then STOP — answers arrive in the
+  next turn's messages. The two-touchpoint rule still applies.
+- The fridge photo arrives as a local file path in the transcript
+  ("[attached file saved at: …]") — Read that path. No path given = no photo;
+  use the no-photo fallback.
+- The "Don't post to #alfred" hard rule does NOT apply to your conversational
+  replies (stdout) — it still applies to `discord_io.py post` (never post to
+  #alfred via the script; recipes/list/summary still go to #meal-plan only).
+- After Step 8 (state committed), end your reply with a line containing exactly:
+  <<<RITUAL_COMPLETE>>>
+- If anything fails irrecoverably, say so plainly in your reply and still emit
+  <<<RITUAL_COMPLETE>>> so the session doesn't wedge — Mike can rerun on laptop.

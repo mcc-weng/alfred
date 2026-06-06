@@ -184,8 +184,23 @@ class AlfredListener(discord.Client):
         self._mark_seen(batch[-1].id)
 
     async def _ritual_reply(self, lines: list[dict]) -> str:
-        return ("🤵 Ritual-via-chat arrives shortly — for now, run "
-                "\"plan the week\" on the laptop.")
+        batch_text = "\n".join(f"{l['author']}: {l['content']}" for l in lines)
+        prior = render_turns(self.transcript.turns())
+        self.transcript.append("user", batch_text)
+        prompt = brain.build_prompt(
+            "ritual",
+            [{"author": "", "content": prior}] if prior else [],
+            lines,
+        )
+        reply = await asyncio.to_thread(
+            brain.run_brain, "ritual", [], [], prompt
+        )
+        done = ritual_complete(reply)
+        reply = strip_sentinel(reply)
+        self.transcript.append("assistant", reply)
+        if done:
+            self.transcript.clear()
+        return reply
 
 
 def main() -> None:
