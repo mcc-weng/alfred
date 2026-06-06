@@ -21,7 +21,7 @@ def main() -> None:
         "{weekday}", now.strftime("%A")
     )
     text = brain.run_brain("nudge", [], [], prompt_override=prompt)
-    if text.strip() == "NOTHING" or not text.strip():
+    if text.strip().upper().rstrip(".") == "NOTHING" or not text.strip():
         print("nudge: nothing to say")
         return
     subprocess.run(
