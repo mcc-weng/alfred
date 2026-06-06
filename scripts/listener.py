@@ -91,6 +91,7 @@ class AlfredListener(discord.Client):
         self.pending: list[discord.Message] = []
         self.flush_task: asyncio.Task | None = None
         self.brain_lock = asyncio.Lock()
+        self.seen_ids: set[int] = set()
         self.transcript = Transcript(RUNTIME / "ritual.json")
         self.last_seen_file = RUNTIME / "last_seen"
 
@@ -116,8 +117,11 @@ class AlfredListener(discord.Client):
     async def on_message(self, message: discord.Message):
         if message.author.bot or message.channel.id != ALFRED:
             return
+        if message.id in self.seen_ids:
+            return
+        self.seen_ids.add(message.id)
         self.pending.append(message)
-        if self.flush_task:
+        if self.flush_task is not None:
             self.flush_task.cancel()
         self.flush_task = asyncio.create_task(self._debounced_flush())
 
@@ -126,6 +130,7 @@ class AlfredListener(discord.Client):
             await asyncio.sleep(DEBOUNCE)
         except asyncio.CancelledError:
             return
+        self.flush_task = None  # past the cancellable window — never cancel in-flight work
         batch, self.pending = self.pending, []
         if batch:
             async with self.brain_lock:
@@ -143,9 +148,11 @@ class AlfredListener(discord.Client):
             lines.append({"author": m.author.display_name, "content": content})
         return lines
 
-    async def _recent_history(self, channel, limit: int = 15) -> list[dict]:
+    async def _recent_history(self, channel, exclude: set[int], limit: int = 15) -> list[dict]:
         out = []
         async for m in channel.history(limit=limit, oldest_first=False):
+            if m.id in exclude:
+                continue
             who = "Alfred" if m.author.bot else m.author.display_name
             out.append({"author": who, "content": m.content})
         return list(reversed(out))
@@ -162,7 +169,7 @@ class AlfredListener(discord.Client):
                 if ritual_now:
                     reply = await self._ritual_reply(lines)
                 else:
-                    history = await self._recent_history(channel)
+                    history = await self._recent_history(channel, {m.id for m in batch})
                     reply = await asyncio.to_thread(
                         brain.run_brain, "chat", history, lines
                     )
@@ -185,6 +192,12 @@ def main() -> None:
     load_env()
     import os
     RUNTIME.mkdir(exist_ok=True)
+    attach_dir = RUNTIME / "attachments"
+    if attach_dir.exists():
+        cutoff = time.time() - 14 * 86400
+        for f in attach_dir.iterdir():
+            if f.is_file() and f.stat().st_mtime < cutoff:
+                f.unlink()
     AlfredListener().run(os.environ["DISCORD_BOT_TOKEN"], log_handler=None)
 
 

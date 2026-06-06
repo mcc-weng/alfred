@@ -34,3 +34,10 @@ def test_transcript_history_format():
              {"role": "assistant", "content": "Hello!"}]
     rendered = listener.render_turns(turns)
     assert rendered == "Mike: hi\nAlfred: Hello!"
+
+
+def test_transcript_expiry(tmp_path, monkeypatch):
+    t = listener.Transcript(tmp_path / "ritual.json")
+    t.append("user", "hello")
+    monkeypatch.setattr(listener, "RITUAL_TIMEOUT", -1)
+    assert not t.active()
