@@ -1,7 +1,7 @@
 # Alfred — Lively Chef Agent (v1: Weekly Cooking Loop)
 
 **Date:** 2026-06-06
-**Status:** Approved design, pre-implementation
+**Status:** v1 shipped 2026-06-07 (first ritual run) · v1.5 shipped 2026-06-07 (live daemon, acceptance passed — pending only first scheduled 9am nudge) · v2 gated on ~3 weeks of cooked meals
 **Owners:** Mike + gf (household)
 
 ## Vision & staging
