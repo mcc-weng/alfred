@@ -7,6 +7,7 @@
 Prompt is piped via STDIN — `--allowedTools` is variadic and would swallow a
 trailing prompt argument (spiked 2026-06-07).
 """
+import datetime
 import json
 import os
 import pathlib
@@ -37,6 +38,10 @@ def _render(lines: list[dict]) -> str:
 
 def build_prompt(mode: str, history: list[dict], messages: list[dict]) -> str:
     template = (ROOT / "prompts" / f"{mode}.md").read_text()
+    now = datetime.datetime.now()
+    template = template.replace("{today}", now.strftime("%Y-%m-%d")).replace(
+        "{weekday}", now.strftime("%A")
+    )
     return template.replace("{history}", _render(history)).replace(
         "{messages}", _render(messages)
     )

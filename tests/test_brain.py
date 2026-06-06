@@ -45,6 +45,11 @@ def test_run_brain_pipes_prompt_via_stdin(tmp_path):
         del os.environ["CLAUDE_BIN"]
 
 
+def test_build_prompt_substitutes_date():
+    p = brain.build_prompt("chat", history=[], messages=[])
+    assert "{today}" not in p and "{weekday}" not in p
+
+
 def test_run_brain_raises_on_nonzero_exit(tmp_path):
     fake = tmp_path / "fake_claude_fail"
     fake.write_text("#!/bin/sh\ncat > /dev/null\necho boom >&2\nexit 3\n")
