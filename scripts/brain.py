@@ -54,13 +54,18 @@ def mode_args(mode: str) -> list[str]:
 def run_brain(mode: str, history: list[dict], messages: list[dict],
               prompt_override: str | None = None) -> str:
     prompt = prompt_override or build_prompt(mode, history, messages)
-    result = subprocess.run(
-        [_claude_bin(), "-p", *mode_args(mode)],
-        input=prompt.encode(),
-        capture_output=True,
-        cwd=ROOT,
-        timeout=TIMEOUT.get(mode, 180),
-    )
+    try:
+        result = subprocess.run(
+            [_claude_bin(), "-p", *mode_args(mode)],
+            input=prompt.encode(),
+            capture_output=True,
+            cwd=ROOT,
+            timeout=TIMEOUT.get(mode, 180),
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(
+            f"brain timed out after {TIMEOUT.get(mode, 180)}s ({mode})"
+        ) from None
     if result.returncode != 0:
         raise RuntimeError(f"brain exited {result.returncode}: "
                            f"{result.stderr.decode()[:500]}")

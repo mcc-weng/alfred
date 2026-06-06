@@ -4,6 +4,8 @@ import pathlib
 import stat
 import sys
 
+import pytest
+
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "scripts"))
 import brain
 
@@ -39,5 +41,17 @@ def test_run_brain_pipes_prompt_via_stdin(tmp_path):
     try:
         out = brain.run_brain("chat", history=[], messages=[{"author": "Mike", "content": "yo"}])
         assert out.strip() == "FAKE-REPLY"
+    finally:
+        del os.environ["CLAUDE_BIN"]
+
+
+def test_run_brain_raises_on_nonzero_exit(tmp_path):
+    fake = tmp_path / "fake_claude_fail"
+    fake.write_text("#!/bin/sh\ncat > /dev/null\necho boom >&2\nexit 3\n")
+    fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+    os.environ["CLAUDE_BIN"] = str(fake)
+    try:
+        with pytest.raises(RuntimeError, match="exited 3"):
+            brain.run_brain("chat", history=[], messages=[{"author": "M", "content": "x"}])
     finally:
         del os.environ["CLAUDE_BIN"]
