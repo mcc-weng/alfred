@@ -1,4 +1,4 @@
-# Alfred v1 — Weekly Cooking Loop
+# Alfred — Lively Chef Agent (v1: Weekly Cooking Loop)
 
 **Date:** 2026-06-06
 **Status:** Approved design, pre-implementation
@@ -6,17 +6,27 @@
 
 ## Vision & staging
 
-Alfred is a household agent. The long-term ambition (general butler: chores, errands,
-calendar) is explicitly deferred. We build one tight loop first, live with it, and let
-the butler emerge from proven usage.
+Alfred is a household **chef agent** — a lively presence both partners chat with:
+drop cravings, fridge photos, and feedback anytime; get conversational replies and
+scarce, useful proactive nudges. The general-butler ambition (chores, errands,
+calendar) remains deferred until the cooking domain proves itself.
 
-- **v1 (this spec):** the weekly cooking loop — plan → recipes → cart-ready list.
-  Runs immediately, manual grocery ordering.
-- **v2 (fast-follow, gated):** browser automation fills the Woolworths cart
-  ("cart, don't checkout"). Built only after ~2–3 weeks prove planned meals
-  actually get cooked.
-- **v3 (someday, if earned):** Discord becomes a live bot → proactive Alfred →
-  iOS app wraps the engine → other butler domains.
+Three layers, shipped in stages:
+
+| Layer | What | Stage |
+|---|---|---|
+| 🧠 Brain | Weekly planning, recipes, state, photo→inventory, Woolies list | v1 |
+| 👂 Ears | Always-on listener — chat with Alfred anytime, instant replies | v1.5 |
+| 📣 Voice | Proactive nudges (tonight's meal, expiry, ritual reminder) | v1.5 |
+
+- **v1 (this week):** engine + first Sunday ritual (laptop, couch). Recipes, plan,
+  and cart-ready list posted to Discord by the Alfred bot. Proves the content is
+  good before adding liveliness.
+- **v1.5 (next 1–2 weekends):** the live agent — gateway listener daemon +
+  proactive crons. The Sunday ritual itself moves into chat; the laptop disappears.
+- **v2 (gated):** browser automation fills the Woolworths cart ("cart, don't
+  checkout"). Built only after ~2–3 weeks prove planned meals actually get cooked.
+- **Later (if earned):** iOS app wraps the engine → other butler domains.
 
 ## Users
 
@@ -32,8 +42,11 @@ phone alone.
 ## What Alfred is (v1)
 
 Claude Code running in `~/Projects/alfred` — skills + markdown state, git-versioned.
-No backend, no hosting. Integrations: Discord MCP (read/post the shared channel),
-vision (fridge photo), and in v2 browser automation (Claude-in-Chrome against
+The engine is always Claude Code on Mike's **Max subscription** (headless
+`claude -p` for automated invocations) — **zero API credits at every stage**. No
+cloud hosting: v1.5's listener and crons run as a launchd daemon on Mike's Mac
+(the proven Jinx pattern). Integrations: Discord bot API (bot token), vision
+(fridge photo), and in v2 browser automation (Claude-in-Chrome against
 Woolworths).
 
 ## Planning drivers
@@ -93,8 +106,10 @@ plan tweaks). No twenty-questions.
   planning time precisely so this works without Mike or a laptop.
 - **Verdicts (the learning signal):** say it in `#alfred`, any phrasing — *"pad thai
   was a banger, less salt next time"*. No format required; Alfred parses at harvest.
-  (Reactions are invisible to Alfred — verified — so verdicts are words, not emoji
-  taps.) Verdicts land in the cookbook; bangers join the favorites rotation
+  (Written words beat emoji taps: they carry the *why*, and they work identically
+  before and after the live agent ships. Bot-API reactions become readable at v1.5
+  and may be added as a bonus signal then.) Verdicts land in the cookbook; bangers
+  join the favorites rotation
   (resurface ~monthly), failures don't repeat, gf's tastes get learned too.
 - **Cravings/notes anytime:** type into `#alfred`; harvested next ritual.
 - **Swaps are free:** plans are suggestions, not contracts. Skipped meals need no
@@ -128,28 +143,50 @@ a quiet channel" is the UX anchor instead of pinning.)
 - **`#meal-plan`** — Alfred-only posts: recipes → Woolies list → week summary
   (newest). The plan can never get buried under chat.
 
-### Verified capabilities (checked 2026-06-06 against the live MCP)
+### Access: real bot account, from day one
 
-discord-mcp is Playwright-based — it drives Discord's web app as a logged-in user
-(env: `DISCORD_EMAIL`/`DISCORD_PASSWORD`), not the bot API. Toolset: list
-servers/channels, read messages, send message. Weekly cadence keeps that fragility
-class acceptable.
+Alfred is a proper Discord **bot application** with its own token — not the
+Playwright-based discord-mcp scraping a user session. (That MCP was verified
+working 2026-06-06 and remains an emergency fallback; the bot API is simpler and
+strictly more capable.) What the bot API gives us:
 
-- ✅ Connects; reads message content + author + timestamp
-- ✅ `attachments` field present in payloads — photo-via-Discord plausible; one live
-  test with a real image remains (fallback unchanged: paste photo into the session)
-- ❌ Reactions not exposed → verdicts are written messages (see During the week)
-- ❌ No pin/edit → two-channel layout (above)
+- **v1 needs only two REST calls** — read channel history (harvest the week's
+  cravings/verdicts) and post messages. No daemon required yet.
+- Messages visibly come from **Alfred** (own name + avatar).
+- History is pull-based → if the v1.5 daemon is ever down, Alfred **backfills on
+  wake** and replies late rather than going deaf. Nothing said in `#alfred` is
+  ever lost.
+- Reactions and pins become available (bonus only — written verdicts stay primary,
+  and the two-channel layout stays because mobile Discord buries pins anyway).
 
-### Setup required before the first ritual
+### Setup required before the first ritual (~15 min, one-time)
 
 1. Create a private Discord server with `#alfred` + `#meal-plan`; both partners join.
-   (The connected account currently only sees a community server — no couple space
-   exists yet.)
-2. Decide posting identity: Alfred posts as whatever account `DISCORD_EMAIL` belongs
-   to. If that's Mike's main, consider a dedicated free "Alfred" account (messages
-   visibly from *Alfred*) and invite it to the server.
-3. ~~Install Playwright browser for the MCP~~ — done 2026-06-06.
+2. Discord Developer Portal → new application **"Alfred"** → create bot, enable the
+   message-content intent, copy the token (stored locally, never committed) →
+   invite to the server with read/send/pin permissions.
+3. Record the two channel IDs in local config.
+
+## The live agent (v1.5): Ears & Voice
+
+A launchd daemon on Mike's Mac (the Jinx pattern). No cloud, no tunnel — the
+Discord gateway is an *outbound* websocket.
+
+- **Ears:** on message in `#alfred` → invoke headless Claude Code (`claude -p`,
+  Max subscription) with the alfred repo + state → conversational reply
+  (*"got it — pad thai queued for next week 👍"*). Mac asleep → gateway reconnects
+  on wake, backfills, replies late. Never deaf, never lossy.
+- **Voice:** scheduled invocations (launchd) for proactive nudges:
+  - *Morning-of:* "Tonight: miso salmon (fast, ~25 min) — take the salmon out."
+  - *Expiry:* "That spinach from Sunday is day 5 — use it tonight?" Derived from
+    the plan + purchase date, **not** live inventory tracking — the
+    ephemeral-inventory decision survives intact.
+  - *Ritual:* "Sunday 5pm — fridge photo + plan?"
+- **Proactive budget (hard rule):** at most ~1 Alfred-initiated message/day,
+  default quieter. Replies may be warm and instant; *initiations* must be scarce
+  and useful, or Alfred gets muted and the system dies.
+- At v1.5 the Sunday ritual itself moves into `#alfred` (photo posted in chat,
+  conversation with live Alfred) — the laptop disappears from the loop.
 
 ## Groceries (Woolworths + Everyday Rewards)
 
@@ -177,8 +214,9 @@ class acceptable.
 - **Wrong/stale product names in v1 lists** → list marks uncertain items
   "or equivalent"; corrections persist to the product map.
 - **Plan abandoned mid-week** (life happens) → nothing breaks; see self-healing.
-- **Discord MCP unavailable** → ritual still runs in-session; plan/recipes posted
-  manually as a copy-paste block (degraded but functional).
+- **Discord bot/daemon down** → ritual still runs in-session; plan/recipes posted
+  manually as a copy-paste block. Gateway backfill means nothing said in `#alfred`
+  is lost while the daemon sleeps (degraded, not broken).
 
 ## Success criteria (review after 3 weeks)
 
@@ -187,6 +225,7 @@ class acceptable.
 3. ≥1 gf craving landed in a plan
 4. Ordering ≤5 min with the cart-ready list
 5. Verdicts being given without nagging (else the feedback UX is wrong)
+6. (post-v1.5) Proactive nudges still welcome after 2 weeks — Alfred not muted
 
 If met → build v2 (cart automation). If not → fix the loop, don't add automation.
 
@@ -194,4 +233,5 @@ If met → build v2 (cart automation). If not → fix the loop, don't add automa
 
 Lunches/breakfasts · cook-night assignment · macro tracking · pantry photo
 inventory · price optimization/specials hunting · meal-kit comparisons · any
-butler domain beyond cooking · hosting/backend/iOS app.
+butler domain beyond cooking · cloud hosting & iOS app (the only infrastructure
+is the local launchd daemon at v1.5).
