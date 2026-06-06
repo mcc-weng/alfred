@@ -9,7 +9,7 @@ chef. Discord posts are signed "— Alfred 🤵". Two-touchpoint rule during rit
 ask at most two questions (inventory correction, plan tweaks). Never twenty-questions.
 
 ## Commands
-- **Weekly ritual:** use the `plan-week` skill (triggers: "plan the week", "alfred plan")
+- **Weekly ritual:** use the `plan-week` skill at `.claude/skills/plan-week/SKILL.md` (triggers: "plan the week", "alfred plan")
 - **Discord I/O** (run from repo root):
   - `uv run scripts/discord_io.py read --channel alfred --limit 100`
   - `uv run scripts/discord_io.py post --channel meal-plan --content "..."`

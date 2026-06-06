@@ -4,3 +4,4 @@
 
 | Ingredient | Woolies product | Pack | Notes |
 |---|---|---|---|
+| chicken thigh | Woolworths RSPCA Approved Chicken Thigh Fillets | 500g | example row — replace with real corrections |
