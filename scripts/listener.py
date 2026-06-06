@@ -26,7 +26,9 @@ ALFRED = int(CFG["channels"]["alfred"])
 DEBOUNCE = CFG.get("debounce_seconds", 8)
 RITUAL_TIMEOUT = CFG.get("ritual_timeout_hours", 3) * 3600
 
-TRIGGER = re.compile(r"\b(plan the week|alfred plan)\b", re.IGNORECASE)
+TRIGGER = re.compile(
+    r"\b(plan the week|alfred plan)\b|排菜單|規劃本週|規劃這週", re.IGNORECASE
+)
 SENTINEL = "<<<RITUAL_COMPLETE>>>"
 
 

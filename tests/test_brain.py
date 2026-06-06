@@ -17,7 +17,7 @@ def test_build_prompt_renders_history_and_messages():
         messages=[{"author": "Gf", "content": "want pad thai"}],
     )
     assert "Mike: hi" in p and "Gf: want pad thai" in p
-    assert "Alfred" in p  # persona from template
+    assert "小當家" in p  # persona from template
 
 
 def test_mode_args_chat_is_readonly():

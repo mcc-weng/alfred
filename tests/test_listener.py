@@ -11,6 +11,13 @@ def test_ritual_trigger_detection():
     assert not listener.is_ritual_trigger("planning to eat out")
 
 
+def test_ritual_trigger_detection_chinese():
+    assert listener.is_ritual_trigger("小當家,排菜單!")
+    assert listener.is_ritual_trigger("我們來規劃這週的菜吧")
+    assert not listener.is_ritual_trigger("我想規劃一下人生")
+    assert not listener.is_ritual_trigger("今晚吃什麼")
+
+
 def test_sentinel_detection_and_strip():
     text = "All posted. Enjoy the week!\n<<<RITUAL_COMPLETE>>>"
     assert listener.ritual_complete(text)
