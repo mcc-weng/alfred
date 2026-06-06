@@ -41,3 +41,15 @@ def test_transcript_expiry(tmp_path, monkeypatch):
     t.append("user", "hello")
     monkeypatch.setattr(listener, "RITUAL_TIMEOUT", -1)
     assert not t.active()
+
+
+def test_stale_transcript_cleared_on_fresh_start(tmp_path, monkeypatch):
+    t = listener.Transcript(tmp_path / "ritual.json")
+    t.append("user", "old ritual turn")
+    monkeypatch.setattr(listener, "RITUAL_TIMEOUT", -1)  # expire it
+    assert not t.active()
+    t.clear()                      # what _ritual_reply now does on fresh trigger
+    monkeypatch.setattr(listener, "RITUAL_TIMEOUT", 3 * 3600)
+    t.append("user", "new ritual turn")
+    assert t.active()              # started was reset — second turn will route to ritual
+    assert len(t.turns()) == 1     # no leaked history

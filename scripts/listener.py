@@ -184,6 +184,8 @@ class AlfredListener(discord.Client):
         self._mark_seen(batch[-1].id)
 
     async def _ritual_reply(self, lines: list[dict]) -> str:
+        if not self.transcript.active():
+            self.transcript.clear()  # fresh trigger after expiry/abandonment: never inherit a stale transcript
         batch_text = "\n".join(f"{l['author']}: {l['content']}" for l in lines)
         prior = render_turns(self.transcript.turns())
         self.transcript.append("user", batch_text)
