@@ -52,6 +52,9 @@ The corrected snapshot is **ephemeral**: use it for this plan, never save it.
   🔥 banger that someone asked for
 - `state/cookbook/` — bangers not cooked in ~4 weeks are rotation candidates
 - `state/woolworths.md` — preferred products for the list
+- `state/skills.md` — the skill curriculum: `play` meals teach the NEXT technique,
+  building on 熟練 ones. Don't repeat a 熟練 technique as the lesson; do reinforce
+  初試 ones if the verdict suggested a retry.
 - Allergies section empty (onboarding incomplete)? Fold "any allergies I must
   know about?" into the Touchpoint 1 question — never propose before knowing.
 
@@ -145,6 +148,9 @@ Tue · {dish} ({mode}, {min}m)
   shopping list
 - For each NEW dish: create `state/cookbook/<slug>.md` with the full recipe and
   an empty `## Verdicts` section. Existing dishes: add `- planned YYYY-MM-DD`.
+- Log each `play` meal's technique to `state/skills.md` as 已排入; during Step 2
+  verdict processing, advance statuses (cooked once → 初試; banger or second
+  success → 熟練).
 - Any product corrections from Mike → update `state/woolworths.md`
 
 ## Step 8 — Close the ritual
