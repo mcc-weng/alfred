@@ -74,20 +74,38 @@ approval.
 Post each via stdin to handle length:
 `cat /tmp/msg.md | uv run scripts/discord_io.py post --channel meal-plan`
 
-### Recipe format (aim ≤1900 chars; phone-at-the-stove scannable)
+### Recipe format — written for BEGINNERS who want to learn
+Mike and his gf are learning to cook. Every recipe is a LESSON, not a reminder:
+every step carries a time estimate + a **sensory cue** (看到/聽到/聞到什麼才算好)
++ the why in one clause. Never assume knowledge — explain terms inline (e.g.
+「斷生」= 蔬菜轉鮮綠、微軟仍脆). Describe heat concretely (中大火 = 油紋晃動、
+將起微煙). Weave in parallel scheduling (「飯下去煮的同時…」). Aim 2500–3500
+chars — the poster auto-splits at 2000 on blank lines, so keep blank lines
+between sections.
 ```
-🍳 **{Day} — {Dish name}**  ({mode} · ~{min} min · serves 2)
+🍳 **{Day} — {菜名}**  ({mode} · 約{min}分 · 2人份)
 
-**Ingredients**
-- {qty} {item}   (one per line, grouped: protein, veg, sauce)
+**🔪 備料(開火前全部完成 — mise en place)**
+- {食材 + 確切刀工與份量}(一行一項;蛋白質/蔬菜/醬料分組)
+- 醬料先調好:{內容}
+- ⏱ 提前準備:{退冰/醃製/回溫等,標明提前多久}
 
-**Steps**
-1. Short imperative steps. Numbered. No prose walls.
+**👨‍🍳 步驟**
+1. {動作} — 約{X}分。{感官判斷線索}。({為什麼})
+2. {每一步都照這個結構;新手會一步一步照著做}
 
-💡 {one technique tip if play mode — 當作傳授絕學}
+**⚠️ 新手最容易翻車的地方**
+- {這道菜最常搞砸的 1–2 個點 + 怎麼避免}
+
+**🔥 主廚秘訣**
+- {2–3 個專業級 nuance — 當作傳授絕學,說清楚差在哪}
+
+**✅ 怎麼知道完成了**
+- {顏色/觸感/溫度/聲音的具體判準}
 — 小當家 🔥
 ```
-(Recipe body in 繁體中文 — ingredients, steps, tips.)
+(全文繁體中文。Cookbook entries in Step 7 store this FULL detailed version, so
+repeat dishes stay rich.)
 
 ### Shopping list format
 ```
