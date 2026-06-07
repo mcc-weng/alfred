@@ -2,8 +2,18 @@
 
 **Date:** 2026-06-08
 **Status:** Approved design, pre-spike
-**Decisions locked:** Approach A (two carts) · Woolworths via Delivery Unlimited
-(optimizer target $75) · top-ups are propose-first, never auto-added.
+**Decisions locked:** Approach A (two carts) · top-ups are propose-first, never
+auto-added · Woolworths fulfillment is **two-phase**:
+- **Phase 1 (weeks 1–4):** Delivery Unlimited **free 30-day trial** — door
+  delivery, optimizer targets $75. A/B test period.
+- **Phase 2 (default destination):** **Direct to Boot pickup** — $0 forever,
+  $50 min, Monday windows (dodges the $2 Sunday surcharge). Woolies threshold
+  optimization disappears; optimizer becomes Asian-Pantry-only ($130).
+- **Decision point ~day 25:** cancel the trial before it charges ($59.50 yr 1 /
+  $119 ongoing) unless Mike actively chooses to keep it. 小當家's Sunday cart
+  report shows trial-day count during Phase 1; a cancel-reminder task is logged
+  when the trial starts. Config flag: `"woolies_fulfillment": "delivery-trial" |
+  "pickup"`.
 **Context:** v1/v1.5 shipped and live. Mike pulled v2 forward ahead of the
 original 3-week gate — owner's call, recorded.
 
@@ -97,7 +107,8 @@ marked in the report. Split knowledge accumulates in the two product maps.
 3. Headless cart-add works AND the cart appears in the Woolies phone app?
 4. Asian Pantry: Shopify? `products.json` live? cart permalink honored?
    Stocks the household's actual staples (地瓜粉/黑糖/豆瓣醬/冷凍餛飩/樹薯粉)?
-5. Mike: activate Delivery Unlimited (30-day free trial) — human task.
+5. Mike: start the Delivery Unlimited free 30-day trial (human task; also log
+   the cancel-by date in tasks.md the day it starts).
 
 Any red spike reshapes the plan before code is written (the listener/launchd
 lesson). Spike 3 red → Approach C fallback for Woolies (links not bots).
