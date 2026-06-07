@@ -20,8 +20,10 @@ twenty-questions. (The project/repo name remains "Alfred".)
   - `uv run scripts/discord_io.py post --channel meal-plan --content "..."`
   - long content via stdin: `cat msg.md | uv run scripts/discord_io.py post --channel meal-plan`
 - **Live daemon (v1.5):** `bash scripts/install_daemon.sh` (re)installs launchd jobs;
-  logs in `.runtime/`. Chat with Alfred in #alfred anytime; say "plan the week"
-  there to run the ritual via chat. Laptop ritual still works as fallback.
+  logs in `.runtime/`. Chat with 小當家 in #小當家的廚房 anytime; say 「排菜單」 (or
+  "plan the week") there to run the ritual via chat. Laptop ritual still works as fallback.
+- **Channel mapping:** #小當家的廚房 = key `alfred` · #本週菜單 = key `meal-plan`
+  (Discord display names; IDs live in config.json — internal keys never change)
 - **Nudges:** daily 09:00 dinner reminder + Sunday 16:00 ritual prompt (silent
   when nothing to say).
 

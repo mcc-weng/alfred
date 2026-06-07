@@ -65,7 +65,7 @@ Default mix 3 fast + 1 batch + 2 play. Every dinner: protein ~30–40 g/serve.
 `play` meals should teach something — name the technique. Apply tweaks; lock on
 approval.
 
-## Step 6 — Post to #meal-plan, in EXACTLY this order
+## Step 6 — Post to #本週菜單 (channel key `meal-plan`), in EXACTLY this order
 (newest message must end up being the summary)
 1. One post per dinner — full recipe, format below
 2. The Woolworths shopping list, format below
@@ -117,7 +117,7 @@ pick the sensible purchasable size. Consolidate across recipes.
 Mon · {dish} ({mode}, {min}m)
 Tue · {dish} ({mode}, {min}m)
 ...
-🛒 清單在上面 · 📖 食譜在上面 · 隨時把想吃的、好不好吃丟到 #alfred
+🛒 清單在上面 · 📖 食譜在上面 · 隨時把想吃的、好不好吃丟到 #小當家的廚房
 — 小當家 🔥
 ```
 (Summary in 繁體中文; day lines like 週一 · 蜜糖醬油雞腿 (fast, 30分).)
@@ -138,22 +138,24 @@ slot."* Then: `git add state/ && git commit -m "ritual: week of YYYY-MM-DD"`
 - A craving that names an allergen gets silently substituted or dropped — never
   spend a touchpoint on it, never serve it.
 - Fridge inventory NEVER persists anywhere.
-- Don't exceed two questions. Don't post to #alfred (that's the humans' channel —
-  v1 Alfred only posts to #meal-plan).
+- Don't exceed two questions. Don't post to #小當家的廚房 via the script (channel
+  key `alfred` — that's the humans' channel); script posts go to #本週菜單
+  (key `meal-plan`) only.
 - If `discord_io.py` fails, finish the ritual in-session and give Mike the posts
   as copy-paste blocks. Degraded beats broken.
 
 ## Discord mode (v1.5 — when invoked headlessly by the listener)
-You are running inside `claude -p`, triggered from the #alfred channel. Differences:
-- Your stdout IS your #alfred reply. Plain text, no markdown headers.
+You are running inside `claude -p`, triggered from the #小當家的廚房 channel. Differences:
+- Your stdout IS your #小當家的廚房 reply. Plain text, no markdown headers.
 - Touchpoints: ask the question as your reply, then STOP — answers arrive in the
   next turn's messages. The two-touchpoint rule still applies.
 - The fridge photo arrives as a local file path in the transcript
   ("[attached file saved at: …]") — Read that path. No path given = no photo;
   use the no-photo fallback.
-- The "Don't post to #alfred" hard rule does NOT apply to your conversational
+- The "Don't post to #小當家的廚房" hard rule does NOT apply to your conversational
   replies (stdout) — it still applies to `discord_io.py post` (never post to
-  #alfred via the script; recipes/list/summary still go to #meal-plan only).
+  channel key `alfred` via the script; recipes/list/summary still go to
+  #本週菜單, key `meal-plan`, only).
 - After Step 8 (state committed), end your reply with a line containing exactly:
   <<<RITUAL_COMPLETE>>>
 - If anything fails irrecoverably, say so plainly in your reply and still emit
