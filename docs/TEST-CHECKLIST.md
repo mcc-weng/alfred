@@ -1,0 +1,96 @@
+# Alfred (小當家) — Living Test Checklist
+
+Status: ⬜ untested · ✅ passed · ❌ failed · ⏳ partial
+Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a real Discord message from Mike · 🗓 = needs next week / real shop / multi-week · 🔧 = I can drive from my side
+
+> Updated as the system gets used for real. selftest.py covers the plumbing; the LLM-behaviour + Discord round-trip + real-account fill need the live human-in-Discord run.
+
+---
+
+## A. Main flow — the E2E spine (do in order)
+- [ ] A1 💬 `排菜單` with a flexible opener (cravings + text fridge, no photo) → ritual starts
+- [ ] A2 🔧 Harvest reads inbox + channel (clean) — *I verify state*
+- [ ] A3 💬 Touchpoint 1: asks ONE light inventory/intent question (doesn't demand a photo)
+- [ ] A4 💬 Week proposal: 6 dinners, modes (fast/batch/play) + reasoning, **respects constraints** (no eggplant · no coriander/celery/皮蛋 · fish=salmon only)
+- [ ] A5 💬 Tweak ("swap 週三" / "只要5天" / "這週不要牛") → adapts
+- [ ] A6 🔧 Lock → saves plan + cookbook + skills; posts **summary + shopping (NOT recipes)** to #本週菜單
+- [ ] A7 💬 Auto-chain fires: "菜單鎖定!我來看看要買什麼…" + cart proposal appears on its own
+- [ ] A8 💬 Asian Pantry permalink → tap → cart pre-fills
+- [ ] A9 💬 `裝吧` → approved → fill runs → items in real Woolies cart → "裝好了" ping
+- [ ] A10 🔧 Don't pay — I remove the test items + verify cart empty
+
+## B. Ritual start variations
+- [ ] B1 💬 Start with a **real fridge photo** (tests the photo→Discord path — never verified)
+- [ ] B2 💬 Start with **just cravings** ("想吃辣的、來點新菜")
+- [ ] B3 💬 Start with **"隨便你 / surprise me"** → plans from staples + rotation + skills
+- [ ] B4 💬 Request an **eating-out day** ("週五外食") → plan skips it
+- [ ] B5 💬 **Allergen named in a craving** (a no-go item) → silently substituted/dropped, no extra question
+
+## C. Chat & memory (mid-week)
+- [ ] C1 ✅ 💬 Verdict ("牛排超讚") → captured to inbox *(passed in testing)*
+- [ ] C2 💬 Craving ("下週想吃韓式") → captured
+- [ ] C3 💬 Preference change ("我們不太吃豬肝了") → captured (preference)
+- [ ] C4 💬 Lesson ("原來脆皮要把皮擦超乾") → captured (lesson) → filed to lessons.md at next ritual
+- [ ] C5 💬 Idle chatter ("今晚好累") → NOT captured
+- [ ] C6 💬 Cooking question ("雞胸怎麼不柴?") → beginner coaching, reads lessons.md
+- [ ] C7 💬 Recipe lookup ("週三煮什麼?") → pulls from plan/cookbook
+- [ ] C8 💬 Dish photo (cooked food) → critique (hype + one improvement)
+- [ ] C9 💬 Continuity: follow-up depending on prior reply → holds context
+- [ ] C10 💬 Idle reset: wait >20 min, new topic → fresh conversation
+- [ ] C11 💬 Persona holds: 小當家/中華一番, 繁中, even if messaged in English
+
+## D. Daily nudge
+- [ ] D1 ✅ 🔧 Morning nudge posts today's full recipe *(passed after fix)*
+- [ ] D2 🔧 Silent on Sunday / no-dinner day
+- [ ] D3 💬 Prep-ahead notes appear (defrost/marinate) when the dish needs them
+
+## E. Cart & threshold edge cases
+- [ ] E1 💬 Under threshold → proposes top-ups from buffer to reach free delivery
+- [ ] E2 💬 Already over threshold → proposes NO top-ups
+- [ ] E3 💬 Can't reach threshold → reports the gap honestly, invents nothing
+- [ ] E4 💬 Selective approve ("只加醬油就好") → applies only that
+- [ ] E5 💬 不用加直接送 → approves without top-ups
+- [ ] E6 💬 `裝吧` with no proposed cart → graceful ("先排菜單")
+- [ ] E7 💬 Low-confidence product match → flagged for review
+- [ ] E8 💬 Re-`裝車` over an existing proposal → re-proposes (overwrites pending.json)
+- [x] E9 ✅ 🤖 Asian Pantry permalink resolves to a real pre-filled cart *(selftest)*
+
+## F. Fill & safety
+- [ ] F1 ✅ 🔧 Awake fill: approval → fill → cart populated → live subtotal+fee → ping *(passed in testing)*
+- [ ] F2 🔧 Self-heal: partial-fail stays `approved` + retries (I can simulate)
+- [ ] F3 🔧 Login-expired → pings "登入一下", stays approved (I can simulate)
+- [x] F4 ✅ 🤖 Idempotency: re-run on a non-approved cart → "nothing to fill", no double *(selftest)*
+- [ ] F5 🗓 Set-absolute: re-POST same SKU → qty stays N, not 2N (needs real cart — next-week acceptance)
+- [ ] F6 🔧 Never checkout — always stops at the cart, never pays
+- [x] F7 ✅ 🤖 `.env` not readable by chat brain (Grep dropped, Read denied) *(selftest)*
+
+## G. Daemon mechanics
+- [ ] G1 💬 Debounce: 2 rapid messages → ONE combined reply
+- [ ] G2 💬 Backfill: message while Mac asleep → late reply on wake (never lost)
+- [ ] G3 💬 Brain error → graceful apology, daemon survives
+- [ ] G4 💬 Two people: gf's messages + cravings handled alongside Mike's
+- [ ] G5 💬 Long recipe (>2000 chars) splits into multiple messages cleanly
+- [ ] G6 🔧 Sunday 4pm reminder nudge fires (ritual prompt)
+
+## H. Deferred — next week / multi-week
+- [ ] H1 🗓 Dark-wake fill (approve → close lid → fills on 9am wake)
+- [ ] H2 🗓 iyf 9am contention → fill defers while coin collector runs (check fill.log)
+- [ ] H3 🗓 Mac off → fill on next boot
+- [ ] H4 🗓 Real pay on a real shop (the trial)
+- [ ] H5 🗓 No-repeat: next week's plan avoids this week's dishes
+- [ ] H6 🗓 Skill progression: a play technique advances 已排入→初試→熟練 after cook+verdict
+- [ ] H7 🗓 Inbox→ritual: this week's captures show up in next Sunday's plan
+- [ ] H8 🗓 Woolies item out of stock / substitution at fill or checkout
+- [ ] H9 🗓 Fulfillment switch delivery-trial → pickup (threshold $75→$50, trial cancel)
+
+## Plumbing self-test (run anytime — `scripts/selftest.py` automates the 🤖 items)
+- [x] P1 ✅ 🤖 `uv run --with pytest --with discord.py pytest tests/ -v` → 46 passed
+- [x] P2 ✅ 🤖 `uv run scripts/selftest.py` → 7/7 (woolies+AP search live, AP permalink, cart_logic, capture, fill-guard, .env-deny)
+
+---
+
+## What's automated vs not (honest boundary)
+- **🤖 Automated (`pytest` + `selftest.py`):** all pure logic, both live search APIs, AP permalink resolution, the fill guard, `.env` hardening, message-splitting. Run these anytime — they have zero side effects.
+- **🔧 I can drive from my side:** the actual fill (touches the real cart — done sparingly, cleaned up), the nudge, simulated fail/login-expired paths.
+- **💬 Needs you in Discord:** anything through the live daemon — the ritual conversation, auto-chain in-channel, debounce/backfill, two-person flow, dish-photo critique. Can't be auto-looped (need real messages + side effects).
+- **🗓 Needs next week:** dark-wake, off-state, 9am contention, real pay, multi-week (no-repeat, skill progression, inbox→ritual reconciliation).
