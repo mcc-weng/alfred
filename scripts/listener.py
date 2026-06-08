@@ -168,6 +168,7 @@ class AlfredListener(discord.Client):
         channel = batch[0].channel
         lines = await self._to_lines(batch)
         batch_text = "\n".join(f"{l['author']}: {l['content']}" for l in lines)
+        # cart is one-shot (only when no active ritual); ritual precedence below
         ritual_now = self.transcript.active() or any(
             is_ritual_trigger(l["content"]) for l in lines
         )

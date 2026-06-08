@@ -61,7 +61,8 @@ def mode_args(mode: str) -> list[str]:
                 "--allowedTools",
                 "Read,Glob,Grep,Write,Edit,"
                 "Bash(uv run scripts/woolies_search.py:*),"
-                "Bash(uv run scripts/asianpantry.py:*)"]
+                "Bash(uv run scripts/asianpantry.py:*),"
+                "Bash(uv run scripts/cart_logic.py:*)"]
     return ["--model", cfg.get("chat_model", "sonnet"),
             "--allowedTools", CHAT_TOOLS]
 

@@ -7,18 +7,27 @@
    照樣可列,但標記讓 Mike 確認。
 2. 對每個 `asianpantry` 項目:先查 `state/asianpantry.md`;沒有就跑
    `uv run scripts/asianpantry.py search "<詞>" --limit 5`,選最合適的 variant。
-3. 算兩邊的 est_subtotal,跟門檻比(config 的 thresholds;woolies 若
-   fulfillment=pickup 則只需 $50)。不足門檻 → 從 `state/buffer.md` + 本週聊天
-   裡「快用完了」的東西,**提案**加購到剛好過門檻,問 Mike 要不要(只提案,
-   絕不自動加)。
+3. 算兩邊的 est_subtotal,跟門檻比。門檻規則:
+   - 先讀 `config.json` 的 `woolies_fulfillment` 欄位:
+     - `"delivery-trial"` → Woolies 免運門檻 **$75**
+     - `"pickup"` → 門檻只需 **$50**
+   - Asian Pantry 門檻固定 **$130**(從 config 的 thresholds 取)
+   - **若某個 cart 已達或超過門檻,不要提案任何加購** — 直接繼續。
+   - 若不足門檻 → 從 `state/buffer.md` + 本週聊天裡「快用完了」的東西,
+     **提案**加購到剛好過門檻,問 Mike 要不要(只提案,絕不自動加)。
+   - 若 buffer + 聊天的候補品項加起來仍無法達到門檻,提案能最接近門檻的
+     組合,並**明確說明仍差多少**(回報 gap 金額);絕不憑空捏造品項。
 4. Asian Pantry:用 `uv run scripts/asianpantry.py permalink <vid:qty> …` 產生
    購物車連結。
 5. 把結果寫進 `state/carts/pending.json`。用 cart_logic 的 schema:必含
    week_of, status, woolies{items,threshold,...}, asianpantry{items,threshold,
    permalink}, fresh_asian(字串陣列)。每個 woolies item 必含 stockcode + qty。
-   status 先 "proposed";Mike 同意加購後才改 "approved"。可用
-   `uv run scripts/cart_logic.py` 無 CLI,直接照 schema 寫 JSON 檔即可;寫完
-   自我檢查 keys 齊全。
+   status 先 "proposed";Mike 同意加購後才改 "approved"。price: null 合法(未知
+   價格)。
+   寫完後立刻執行驗證:
+   `uv run scripts/cart_logic.py validate state/carts/pending.json`
+   若輸出 `OK` 則繼續。若輸出 `INVALID: ...`,讀取錯誤訊息、修正 JSON、再次驗證,
+   直到輸出 `OK` 為止。
 6. 回報到 #小當家的廚房(stdout 即回覆):兩個 cart 的品項數、est 小計、門檻狀態、
    不確定的對應、加購提案、以及 Asian Pantry 的 permalink(可直接手機點)。
    Woolies 的實際裝車是分開的(Plan B);這裡只到「提案+寫檔」。

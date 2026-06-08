@@ -46,3 +46,24 @@ def load_pending(path: pathlib.Path) -> dict:
     p = json.loads(path.read_text())
     validate_pending(p)
     return p
+
+
+def main() -> None:
+    import argparse
+    import sys
+    ap = argparse.ArgumentParser()
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    v = sub.add_parser("validate")
+    v.add_argument("path")
+    a = ap.parse_args()
+    if a.cmd == "validate":
+        try:
+            load_pending(pathlib.Path(a.path))
+        except (ValueError, OSError, json.JSONDecodeError) as e:
+            print(f"INVALID: {e}", file=sys.stderr)
+            sys.exit(1)
+        print("OK")
+
+
+if __name__ == "__main__":
+    main()
