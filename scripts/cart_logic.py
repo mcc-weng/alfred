@@ -14,7 +14,7 @@ REQUIRED = ("week_of", "status", "woolies", "asianpantry", "fresh_asian")
 
 
 def subtotal(items: list[dict]) -> float:
-    return round(sum(i["qty"] * i["price"] for i in items), 2)
+    return round(sum(i["qty"] * (i["price"] or 0) for i in items), 2)
 
 
 def threshold_status(sub: float, threshold: int) -> dict:
@@ -34,6 +34,13 @@ def validate_pending(p: dict) -> None:
     for item in p["woolies"]["items"]:
         if "stockcode" not in item or "qty" not in item:
             raise ValueError(f"woolies item missing stockcode/qty: {item}")
+    ap = p["asianpantry"]
+    if ap["items"]:
+        if not ap.get("permalink"):
+            raise ValueError("asianpantry has items but no permalink")
+        for item in ap["items"]:
+            if "variant_id" not in item or "qty" not in item:
+                raise ValueError(f"asianpantry item missing variant_id/qty: {item}")
 
 
 def save_pending(p: dict, path: pathlib.Path) -> None:
@@ -55,6 +62,8 @@ def main() -> None:
     sub = ap.add_subparsers(dest="cmd", required=True)
     v = sub.add_parser("validate")
     v.add_argument("path")
+    f = sub.add_parser("finalize")
+    f.add_argument("path")
     a = ap.parse_args()
     if a.cmd == "validate":
         try:
@@ -63,6 +72,30 @@ def main() -> None:
             print(f"INVALID: {e}", file=sys.stderr)
             sys.exit(1)
         print("OK")
+    elif a.cmd == "finalize":
+        try:
+            path = pathlib.Path(a.path)
+            p = json.loads(path.read_text())
+            # compute subtotals
+            w_est = subtotal(p["woolies"]["items"])
+            ap_est = subtotal(p["asianpantry"]["items"])
+            p["woolies"]["est_subtotal"] = w_est
+            p["asianpantry"]["est_subtotal"] = ap_est
+            # compute threshold_status
+            p["woolies"]["threshold_status"] = threshold_status(w_est, p["woolies"]["threshold"])
+            p["asianpantry"]["threshold_status"] = threshold_status(ap_est, p["asianpantry"]["threshold"])
+            # save_pending validates before writing
+            save_pending(p, path)
+        except (ValueError, OSError, json.JSONDecodeError) as e:
+            print(f"INVALID: {e}", file=sys.stderr)
+            sys.exit(1)
+        # summary line
+        def _fmt(est, ts):
+            if ts["met"]:
+                return f"${est:.2f} (met)"
+            return f"${est:.2f} (gap ${ts['gap']:.2f})"
+        print(f"woolies {_fmt(w_est, p['woolies']['threshold_status'])} | "
+              f"asianpantry {_fmt(ap_est, p['asianpantry']['threshold_status'])}")
 
 
 if __name__ == "__main__":

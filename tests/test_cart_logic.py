@@ -53,3 +53,25 @@ def test_validate_pending_rejects_woolies_item_without_stockcode():
            "fresh_asian": []}
     with pytest.raises(ValueError):
         cl.validate_pending(bad)
+
+
+def test_subtotal_null_price_counts_zero():
+    assert cl.subtotal([{"qty": 2, "price": None}, {"qty": 1, "price": 3.0}]) == 3.0
+
+
+def test_validate_rejects_ap_items_without_permalink():
+    import pytest
+    bad = {"week_of": "x", "status": "proposed",
+           "woolies": {"items": [], "threshold": 75},
+           "asianpantry": {"items": [{"variant_id": 1, "qty": 1}], "threshold": 130, "permalink": None},
+           "fresh_asian": []}
+    with pytest.raises(ValueError):
+        cl.validate_pending(bad)
+
+
+def test_validate_allows_empty_ap_with_no_permalink():
+    good = {"week_of": "x", "status": "proposed",
+            "woolies": {"items": [], "threshold": 75},
+            "asianpantry": {"items": [], "threshold": 130, "permalink": None},
+            "fresh_asian": []}
+    cl.validate_pending(good)  # no raise
