@@ -1,143 +1,182 @@
-# Alfred v2 — 雙購物車 (Two-Cart Automation)
+# Alfred v2 — 雙購物車 (Two-Cart, Dark-Wake Autonomous)
 
 **Date:** 2026-06-08
 **Status:** Spiked & validated — ready for implementation plan
-**Decisions locked:** Approach A (two carts) · top-ups propose-first, never
-auto-added · **two-tool architecture** (autonomous matching + interactive
-Woolies push via Claude-in-Chrome + Asian Pantry permalink — Playwright dropped)
-· Woolworths fulfillment is **two-phase**:
-- **Phase 1 (weeks 1–4):** Delivery Unlimited **free 30-day trial** — door
-  delivery, optimizer targets $75. A/B test period.
-- **Phase 2 (default destination):** **Direct to Boot pickup** — $0 forever,
-  $50 min, Monday windows (dodges the $2 Sunday surcharge). Woolies threshold
-  optimization disappears; optimizer becomes Asian-Pantry-only ($130).
-- **Decision point ~day 25:** cancel the trial before it charges ($59.50 yr 1 /
-  $119 ongoing) unless Mike actively chooses to keep it. 小當家's cart report
-  shows trial-day count during Phase 1; cancel-reminder task logged when the
-  trial starts. Config flag: `"woolies_fulfillment": "delivery-trial" | "pickup"`.
+**Owner goal:** "We don't touch the laptop." Finish planning with 小當家 in
+Discord → both carts get filled → pay from the phone. Laptop awake = instant;
+asleep = filled on the existing 9am dark-wake; off/bugged = filled on next boot /
+retried then escalated.
 
-**Context:** v1/v1.5 shipped & live. Mike pulled v2 forward ahead of the original
-3-week gate (owner's call). Spikes run 2026-06-08 — see "Spike results" below;
-they reshaped the architecture from headless-Playwright to Claude-in-Chrome.
+## Locked decisions
 
-## Spike results (2026-06-08) — what reshaped this design
+- **Approach:** two carts (Woolworths + Asian Pantry), top-ups propose-first.
+- **Fill, not checkout** — money never moves without a human thumb (pay on phone).
+- **Woolies cart-fill = a mechanical script** (`woolies_fill`, no AI) driving Mike's
+  **real logged-in browser via CDP** — real fingerprint beats Akamai (proven). The
+  daemon does the *thinking*; this script does the deterministic *fill*.
+- **Asian Pantry = Shopify cart permalink** — 小當家 posts a URL; tap on phone.
+- **Autonomy via the iyf dark-wake pattern** (lifted from `~/Projects/iyf-daily-coin`):
+  `pmset` wake + launchd + `caffeinate -is` + retry plist + PID-lock + idempotency.
+- **No new wake event.** `pmset repeat` allows only ONE recurring wake; iyf owns
+  the 9am slot. 小當家's fill **piggybacks** on that existing 9am dark-wake +
+  a 30-min retry. Instant when the Mac is already awake.
+- **Woolworths fulfillment is two-phase:**
+  - **Phase 1 (weeks 1–4):** Delivery Unlimited **free 30-day trial** (door
+    delivery, optimizer targets $75). Cancel-by task logged when it starts;
+    cart report shows trial-day count.
+  - **Phase 2 (default):** **Direct to Boot pickup** — $0 forever, $50 min,
+    Monday windows (dodge the $2 Sunday surcharge). Woolies threshold games
+    disappear; optimizer becomes Asian-Pantry-only ($130). Config flag
+    `"woolies_fulfillment": "delivery-trial" | "pickup"`.
 
-- **Woolworths blocks headless browsers** (Akamai "Access Denied"). Headless
-  Playwright is dead on arrival → **dropped**.
-- **Claude-in-Chrome drives Mike's REAL Chrome → beats Akamai trivially** (it's
-  a real user session, not a robot). Verified end-to-end against the live site:
-  - ✅ Logged in as Mike (`/apis/ui/Shopper` → 200, header "Hi, Mike"). **Login
-    needs ZERO automation** — it's his normal browser; persists for weeks.
-  - ✅ Product search API returns clean JSON (name/SKU/price/pack/availability).
-  - ✅ Add to cart: `POST /apis/ui/Trolley/Items {stockcode, quantity, source}`.
-  - ✅ Remove / set qty: same endpoint with `quantity:0` (or N).
-  - ✅ Live totals readable: `GET /apis/ui/Trolley` → `Totals.SubTotal` +
-    `DeliveryFee` → **threshold/free-delivery status is EXACT, not estimated.**
+**Context:** v1/v1.5 live. Mike pulled v2 forward (owner's call). Spikes
+2026-06-08 reshaped the architecture twice: headless-Playwright (Akamai-blocked)
+→ Claude-in-Chrome interactive → **dark-wake autonomous** once the iyf pattern
+proved a *scheduled headless* run can drive the real logged-in browser.
+
+## Spike results (2026-06-08)
+
+- Woolworths blocks **headless** browsers (Akamai). Headless Playwright dropped.
+- Driving Mike's **real logged-in browser** (Claude-in-Chrome / CDP) beats Akamai.
+  Verified live against the site:
+  - ✅ Logged in as Mike (`GET /apis/ui/Shopper` → 200, header "Hi, Mike").
+  - ✅ Search API → clean JSON (name/SKU/price/pack/availability); also works via
+    plain unauthenticated HTTP → matching can run unattended.
+  - ✅ Add: `POST /apis/ui/Trolley/Items {stockcode, quantity, source}`.
+  - ✅ Remove / set qty: same endpoint, `quantity:0` (or N).
+  - ✅ Live totals: `GET /apis/ui/Trolley` → `Totals.SubTotal` + `DeliveryFee` →
+    threshold/free-delivery status is **exact, read live**.
   - Test item added then removed; cart left empty.
-- **Woolworths search API also works via plain HTTP (urllib), unauthenticated**
-  → product *matching* can run unattended in the Sunday daemon; only the
-  authenticated *cart-push* needs the real browser.
-- **Asian Pantry = Shopify.** `products.json` ✅, `search/suggest.json` ✅
-  (good staple coverage: 地瓜粉/樹薯粉/豆瓣醬/麻油/米酒/餛飩/5kg米), **cart
-  permalink `/cart/<variant>:<qty>` honored** (verified via `cart.js`). Just a
-  URL → fully phone-friendly, zero account risk.
-- ⚠️ Side-finding: `IsWowRewardsCardRegistered:false` — Mike's Everyday Rewards
-  may not be linked to the online account (he should check, to earn points).
+- **iyf-daily-coin proves the dark-wake pattern works end-to-end** on this Mac:
+  `sudo pmset repeat wakeorpoweron MTWRFSU 08:59:00` dark-wakes (lid closed, AC);
+  launchd `StartCalendarInterval` 09:00 runs the job; `caffeinate -is -t 3600`
+  holds it awake; a `StartInterval 1800` retry plist catches missed runs; PID-lock
+  + idempotency prevent races/double-runs. A scheduled headless `claude --print`
+  drives the real logged-in browser (even past a slider captcha). ~75% of that
+  infra is site-agnostic and liftable.
+- **Asian Pantry = Shopify:** `products.json` ✅, `search/suggest.json` ✅ (good
+  staple coverage: 地瓜粉/樹薯粉/豆瓣醬/麻油/米酒/餛飩/5kg米), cart permalink
+  `/cart/<variant>:<qty>` honored (verified via `cart.js`).
+- ⚠️ `IsWowRewardsCardRegistered:false` — Everyday Rewards may not be linked to
+  the online account (Mike: check, to earn points).
 
-## Architecture — two tools, split by what each half needs
+## End-to-end flow
 
-The work splits into **thinking** (autonomous, in Discord) and **cart-push**
-(authenticated, per-store).
+### Sunday (the thinking — autonomous, in Discord)
+1. Ritual completes → 小當家:「菜單鎖定!要我去裝購物車嗎?」
+2. Mike 「裝」→ `cart` brain mode runs (no browser): matches every `woolies` /
+   `asianpantry` list line to a real product via the search scripts; runs the
+   threshold optimizer; proposes top-ups if short.
+3. 小當家 reports to phone: Woolies items + est. subtotal vs threshold; Asian
+   Pantry items + subtotal vs $130 + top-up proposals; fresh-Asian residue
+   (豬血-tier → human Box Hill line). Mike approves/declines top-ups.
+4. On approval, 小當家 writes **`state/carts/pending.json`** (the Woolies SKU+qty
+   list, the Asian Pantry permalink, fulfillment mode, timestamp) and posts the
+   **Asian Pantry permalink** (tap on phone → checkout, done).
 
-### Half 1 — Matching & optimization (autonomous, Sunday daemon)
-Runs inside a new `cart` brain mode spawned by the listener; no browser.
-- `scripts/woolies_search.py` — plain-HTTP wrapper over Woolworths' public
-  product search. Ops: `search <term>` → ranked candidates (SKU/name/price/pack/
-  available). Used to match every `woolies`-tagged list item to a real SKU.
-- `scripts/asianpantry.py` — Shopify catalog client. Ops: `search <term>` →
-  candidates (variant_id/title/price/available); `permalink <variant:qty,…>` →
-  the cart URL. Matching + the final deliverable link.
+### The Woolies fill (mechanical, dark-wake aware)
+`woolies_fill` reads `pending.json`, connects via CDP to the logged-in browser,
+POSTs each SKU to the Trolley API, reads live SubTotal + DeliveryFee, marks the
+cart `filled`, and pings 📱「裝好了:$X,運費 $Y。手機結帳」.
+
+| Laptop state | What happens |
+|---|---|
+| 🟢 **Awake** (Mike home Sun eve) | Daemon triggers the fill immediately → cart filled ~1 min → phone ping. No wake needed. |
+| 🟡 **Asleep** | `pending.json` waits → Mac dark-wakes 9am (existing iyf wake) → fill job runs in that window → cart ready ~Mon 9am → phone ping. (Battery: `-s` may re-sleep; retry catches it next genuine wake.) |
+| 🔴 **Off** | `wakeorpoweron` may power it on (then fills); if not, `pending.json` survives → fill runs on **next boot** (launchd RunAtLoad + retry). Filled within ~1 min of opening the laptop. Never lost. |
+| 🟠 **Bugged / failed** | Cart marked `filled` **only on success** → retry every 30 min on subsequent wakes. Login-expired → 小當家 pings 「開 app 登入一下」→ one-tap → next retry succeeds. After N fails → escalate: post the plain shopping list (degraded beats broken). Crashed run's PID-lock is stolen by the next. |
+
+**Pay:** always the human, on the phone — Woolies app (cart synced) + Asian
+Pantry link. No checkout code exists anywhere.
+
+## Architecture (units)
+
+### Autonomous (Sunday daemon — no browser)
+- `scripts/woolies_search.py` — plain-HTTP Woolworths product search.
+  `search <term>` → ranked candidates (SKU/name/price/pack/available).
+- `scripts/asianpantry.py` — Shopify catalog client. `search <term>` → candidates
+  (variant_id/title/price/available); `permalink <variant:qty,…>` → cart URL.
 - Both consult learned maps first (`state/woolworths.md`, new
-  `state/asianpantry.md`); unknowns get best-guess + are flagged; corrections
-  update the maps (existing Sunday-harvest loop).
-- **Output:** a committed `state/carts/YYYY-MM-DD.json` — the proposed Woolies
-  SKU list (with est. subtotal from search prices) + the Asian Pantry permalink +
-  fresh-Asian residue. Posted to Discord for approval.
+  `state/asianpantry.md`); unknowns best-guessed + flagged; corrections update
+  the maps via the existing Sunday harvest.
+- New `cart` brain mode (listener-spawned): matches/optimizes/proposes, writes
+  `state/carts/pending.json`. allowedTools = Read/Glob/Grep, Write, Edit,
+  `Bash(uv run scripts/woolies_search.py:*)`, `Bash(uv run scripts/asianpantry.py:*)`.
+  (Write/Edit unscopeable by tooling; restricted to state maps + `state/carts/`
+  by prompt contract — same trust level as ritual mode.) Timeout 900s.
 
-### Half 2 — Cart-push (authenticated)
-- **Asian Pantry → permalink.** 小當家 posts the `/cart/…` URL in Discord. Mike
-  taps on his phone, checks out. Fully autonomous + couch-friendly. Done.
-- **Woolworths → Claude-in-Chrome.** No permalink (not Shopify). An **interactive
-  "shopping run"**: Mike at the Mac with Chrome open + a Claude session
-  (Claude Code / remote-control) says e.g. "push this week's Woolies cart."
-  That session reads `state/carts/<latest>.json` and, via the verified Trolley
-  API in his real browser, adds each SKU, then reports the **live** subtotal +
-  delivery fee. Mike reviews substitutions in the Woolies UI and taps pay.
-  - Driven by an interactive Claude session, NOT the headless daemon (browser
-    tools only exist interactively). This is the one Mac-bound step.
-  - Captured as a documented procedure (`docs/woolies-push.md`) + a thin helper
-    `scripts/woolies_cart.js` (the verified add/read JS) the session pastes/runs,
-    so it's repeatable and not improvised each week.
+### The fill (mechanical — drives the real browser)
+- `scripts/woolies_fill.py` — connects via CDP to the logged-in Chrome (launches
+  it with the persistent logged-in profile + debug port if not running), POSTs
+  the `pending.json` SKUs to the Trolley API, reads live totals, writes result +
+  marks `filled`, pings Discord via `discord_io.py`. **No AI, no tokens** — the
+  matching already happened; this is deterministic.
+- `scripts/fill_runner.sh` — the iyf-style wrapper: PID-lock, idempotency guard
+  (skip if `pending.json` already `filled`), `caffeinate -is -t`, logging, then
+  runs `woolies_fill.py`. Invoked by the daemon (awake path) AND launchd.
+- `launchd/com.alfred.fill.plist` — `StartCalendarInterval` 09:00 (rides the iyf
+  wake) + a separate `StartInterval 1800` retry plist. No `pmset` change.
 
-### Threshold optimizer (pure logic, in cart-mode prompt)
-- Config `"thresholds": {"woolies": 75, "asianpantry": 130}` (woolies threshold
-  ignored once `woolies_fulfillment` = `pickup` → $50 min only).
-- Subtotal < threshold → propose top-ups, priority: (a) items flagged 「快用完了」
-  in chat since last week, (b) `state/buffer.md` standing candidates (rice, oils,
-  米酒, frozen wontons, soy…; humans edit), (c) predictable staples.
-- **Propose-only.** Nothing added without a Discord yes. For Woolies the true
-  fee is read live during the push, so the optimizer's estimate is reconciled
-  against reality before Mike pays.
+### Auth
+- **Primary:** persistent logged-in browser profile (Mike logs in once; persists
+  weeks). **Fallback:** scripted login from `.env` (`WOOLWORTHS_EMAIL/PASSWORD`),
+  iyf-style, attempted only when the session check fails; if it hits a bot-wall,
+  escalate to Discord「登入一下」. Login check: `GET /apis/ui/Shopper` == 200.
+- Harden: project settings **deny the brain `Read` on `.env`** — only scripts read
+  creds; no brain mode can see them. Creds never used for the fingerprint (real
+  browser session handles that).
+
+### Threshold optimizer (pure logic, cart-mode prompt)
+- Config `"thresholds": {"woolies": 75, "asianpantry": 130}` (woolies ignored once
+  `woolies_fulfillment` = `pickup` → $50 min only).
+- Subtotal < threshold → propose top-ups, priority: (a) 「快用完了」 flags from chat,
+  (b) `state/buffer.md` standing candidates (rice/oils/米酒/frozen wontons/soy…;
+  humans edit), (c) predictable staples. **Propose-only.** For Woolies the true
+  fee is read **live during the fill** and reported before Mike pays.
 
 ### Channel split
-Ritual Step 6 already tags every shopping-list line `woolies` / `asianpantry` /
-`fresh-asian`. fresh-asian (豬血-tier: same-day fresh / not online) → human Box
-Hill line, clearly marked. Split knowledge accumulates in the two maps.
-
-### Daemon wiring
-- New brain mode `cart`: allowedTools = Read/Glob/Grep, Write, Edit,
-  `Bash(uv run scripts/woolies_search.py:*)`,
-  `Bash(uv run scripts/asianpantry.py:*)`. (Write/Edit unscopeable by tooling;
-  restriction to state maps + `state/carts/` by prompt contract — same trust
-  level as ritual mode.) Timeout 900s. **No browser in this mode** — it only
-  matches/optimizes/proposes and writes the cart JSON.
-- Trigger: ritual mode offers it at completion; or listener keyword
-  (「裝車」/「裝購物車」/"fill the carts").
+Ritual Step 6 tags each list line `woolies` / `asianpantry` / `fresh-asian`.
+fresh-asian (豬血-tier: same-day fresh / not online) → human Box Hill line.
+Split knowledge accumulates in the two maps.
 
 ## Risk posture
 
-- **Cart, never checkout** — both channels, non-negotiable. Money needs a thumb.
-- No bot-detection arms race: Woolies push is Mike's real logged-in browser,
-  human-paced, weekly. No headless automation, no stored Woolies password, no
-  persistent bot profile.
-- Asian Pantry: permalink = just a URL; zero account risk.
-- Degraded mode: if search APIs change, cart mode still posts the v1-style list
-  (degraded beats broken — dinner never blocks on automation).
-- `.env` now holds Woolworths creds (Mike's choice). Harden: project settings
-  **deny brain `Read` on `.env`**; only scripts read it. Creds are NOT used for
-  login (real-browser session handles that) — kept only as a convenience/fallback.
-- Secrets in gitignored `.runtime/` + `.env`; token hygiene unchanged.
+- **Fill, never checkout** — both channels. Money needs a phone tap.
+- No bot-detection arms race: the fill is Mike's real logged-in browser, weekly,
+  human-paced; no stored-password login in the normal path; real fingerprint.
+- Asian Pantry permalink = just a URL; zero account risk.
+- **Never lost / never double:** `pending.json` persists; idempotency marks
+  filled-once; retry drains on any wake; persistent failure → Discord + plain-list
+  fallback (degraded beats broken — shopping never blocks).
+- Secrets in gitignored `.env` + `.runtime/`; `.env` denied to brains.
+- Shares the Mac's 9am wake with iyf but uses a different browser profile → no
+  collision; never modifies iyf's `pmset`/launchd.
 
-## Open spike (non-blocking, do during build)
-- Confirm `woolies_search.py` plain-HTTP search stays unblocked over repeated
-  weekly use (Akamai may rate-limit datacenter IPs). Fallback if it flags:
-  do matching via Claude-in-Chrome too (same interactive session), OR cache/
-  throttle. Low risk at weekly volume.
+## Integration spike (during build, before wiring launchd)
+Confirm the full chain on THIS Mac: write a test `pending.json` → run
+`fill_runner.sh` → it connects via CDP to the logged-in browser → adds the SKUs →
+reads back subtotal+fee → marks filled. Then confirm it fires in the 9am wake
+window once (or simulate via `pmset schedule wake` for a near-future minute).
+Red → fall back to the interactive Claude-in-Chrome push (still phone-pay) and
+re-scope autonomy.
 
 ## Human tasks (Mike)
-1. Start the Delivery Unlimited free 30-day trial; log the cancel-by date.
-2. Check Everyday Rewards is linked to the online account (earn points).
+1. Start the Delivery Unlimited free 30-day trial; note the cancel-by date.
+2. Check Everyday Rewards is linked to the online account.
+3. One-time: log into Woolworths in the persistent browser profile when prompted.
 
 ## Success criteria (3 weeks after launch)
-1. Sunday thinking is autonomous; Mike's shopping effort = approve in Discord +
-   tap Asian Pantry link + a ≤2-min Woolies push run.
-2. ≥90% of items matched to correct products by week 3 (maps warmed).
-3. $0 delivery fees on both channels in normal weeks (read live for Woolies).
+1. Sunday is Discord-only for Mike (approve + tap Asian Pantry link); Woolies cart
+   appears on his phone with **no laptop interaction**.
+2. ≥90% items matched to correct products by week 3 (maps warmed).
+3. $0 delivery fees both channels in normal weeks (Woolies fee read live).
 4. 亞超 in-person trips reduced to fresh-only or zero.
 5. Zero accidental checkouts/charges (structurally impossible — no checkout code).
+6. The fill never silently dies: every failure surfaces in Discord within a day.
 
 ## Out of scope
-Auto-checkout (never) · price/specials hunting · additional channels
+Auto-checkout (never) · price/specials hunting · extra channels
 (KFL/HungryPanda/Coles — revisit only if Asian Pantry coverage proves poor) ·
-delivery-slot booking · returns/refunds · multi-store route planning · any
-headless browser automation against Woolworths (proven blocked).
+delivery-slot booking · returns/refunds · multi-store routing · a standing
+always-on server for true laptop-off autonomy (a later move; Mac-on-wake is the
+v2 answer) · any headless-browser automation against Woolworths (proven blocked).
