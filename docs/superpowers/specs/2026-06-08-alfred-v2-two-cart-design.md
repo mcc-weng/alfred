@@ -152,6 +152,19 @@ Split knowledge accumulates in the two maps.
 - Shares the Mac's 9am wake with iyf but uses a different browser profile → no
   collision; never modifies iyf's `pmset`/launchd.
 
+## Plan B design inputs (pinned during v2a build)
+- **Status lifecycle:** cart mode (v2a) writes `pending.json` as `proposed`. Plan B
+  must define how it reaches `approved` and which status the fill consumes — esp.
+  the no-top-up-needed case (already over threshold), where nothing currently flips
+  it. Likely: a follow-up "approve"/"裝吧" handling, or the fill consumes the latest
+  `proposed` after Mike's confirmation. Decide in Plan B's first task.
+- **finalize before fill:** Plan B should re-run `cart_logic.py finalize` (or trust
+  v2a's filled `est_subtotal`/`threshold_status`) and reconcile against the LIVE
+  Woolies subtotal+fee read during the fill before reporting "ready to pay".
+- v2a delivered (verified 2026-06-08): HTTP matching, AP permalink (resolves to a
+  real cart), propose-first optimizer, channel tags, `pending.json` + validator +
+  `finalize` CLI, `.env` denied to brains. 38 tests green.
+
 ## Integration spike (during build, before wiring launchd)
 Confirm the full chain on THIS Mac: write a test `pending.json` → run
 `fill_runner.sh` → it connects via CDP to the logged-in browser → adds the SKUs →
