@@ -88,6 +88,7 @@ class Transcript:
         if not d["turns"]:
             d["started"] = time.time()
         d["turns"].append({"role": role, "content": content})
+        d["turns"] = d["turns"][-200:]
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(json.dumps(d, ensure_ascii=False, indent=1))
 
