@@ -9,6 +9,7 @@ Backfills missed messages on connect. Ritual mode = multi-turn transcript replay
 persisted to .runtime/ritual.json (survives daemon restarts).
 """
 import asyncio
+import datetime
 import json
 import pathlib
 import re
@@ -263,12 +264,18 @@ class AlfredListener(discord.Client):
 
     async def _auto_propose_cart(self, channel, batch) -> None:
         """After the ritual completes, auto-run cart mode to propose the cart."""
+        plans_dir = ROOT / "state" / "plans"
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        plan_files = sorted(plans_dir.glob("*.md")) if plans_dir.exists() else []
+        if not plan_files or not plan_files[-1].stem.startswith(today):
+            print("auto-cart: no fresh plan written today — skipping (ritual may have errored)", flush=True)
+            return
         try:
             await channel.send("🛒 小當家:菜單鎖定!我來看看要買什麼…")
             history = await self._recent_history(channel, {m.id for m in batch})
             reply = await asyncio.to_thread(
                 brain.run_brain, "cart", history,
-                [{"author": "小當家", "content": "(ritual just finished — 自動裝車:讀最新計畫,配對商品,提出採買提案)"}])
+                [{"author": "小當家", "content": "(ritual just finished — 自動裝車:讀最新計畫,配對商品,提出採買提案,status 先寫 proposed)"}])
             for chunk in split_message(reply):
                 await channel.send(chunk)
         except Exception as e:  # never let the auto-chain crash the daemon
