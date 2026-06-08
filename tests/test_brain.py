@@ -24,7 +24,12 @@ def test_mode_args_chat_is_readonly():
     args = brain.mode_args("chat")
     assert "--allowedTools" in args
     tools = args[args.index("--allowedTools") + 1]
-    assert "Write" not in tools and "Bash" not in tools
+    # Chat must never have general Write/Edit; only the scoped capture script Bash is allowed
+    assert "Write" not in tools and "Edit" not in tools
+    assert "Bash(uv run scripts/capture.py:*)" in tools
+    # No other Bash scopes allowed in chat
+    other_bash = tools.replace("Bash(uv run scripts/capture.py:*)", "")
+    assert "Bash" not in other_bash
 
 
 def test_mode_args_ritual_has_scoped_bash():

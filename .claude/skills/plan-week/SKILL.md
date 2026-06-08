@@ -17,7 +17,7 @@ everything else.
 in English (real product names, searchable in the Woolies app). Dish names in
 recipes/summary: 中文 (English in brackets only if genuinely clearer).
 
-## Step 1 — Harvest the channel
+## Step 1 — Harvest the channel + inbox
 Run: `uv run scripts/discord_io.py read --channel alfred --limit 100`
 Ignore messages with `bot: true`. **Cutoff:** use the newest filename in
 `state/plans/` as the cutoff date — ignore messages timestamped at or before it
@@ -28,6 +28,19 @@ From messages since the last plan (newest file in `state/plans/`), extract:
 - **Cravings/requests** ("want pad thai", "something spicy")
 - **Flags** ("out of olive oil" → add to shopping list even if a staple)
 - **Fridge photo** — the most recent image attachment
+
+**Also read `state/inbox.md`** (mid-week capture from chat mode): Read the file if
+it exists. Fold its lines into the harvest — verdict lines inform Step 2 cookbook
+updates; craving lines feed the proposal; preference/correction lines may warrant
+updating `state/preferences.md` and/or `state/woolworths.md` (handle these in
+Step 2 / Step 7 as appropriate). After reading, **clear the inbox** by writing
+just the header back:
+```
+# Capture inbox — mid-week feedback awaiting the next ritual
+<!-- Appended by chat via capture.py. The ritual reads + clears this. -->
+
+```
+This ensures next week starts fresh. If the file doesn't exist, skip silently.
 
 ## Step 2 — Process verdicts FIRST
 List `state/cookbook/` first to resolve dish slugs. For each verdict, append to
