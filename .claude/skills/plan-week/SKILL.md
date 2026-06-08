@@ -132,6 +132,14 @@ Use `state/woolworths.md` products where known; otherwise best guess + "(or
 equivalent)". Ignore rows marked "example". Pack-size reasoning: recipes say "1 onion", Woolies sells units —
 pick the sensible purchasable size. Consolidate across recipes.
 
+**Channel tags (v2):** tag every shopping-list line with its source channel —
+`[woolies]` (mainstream groceries), `[asianpantry]` (dry/frozen Asian pantry —
+sauces, starches, noodles, 米, 冷凍餛飩), or `[fresh-asian]` (same-day fresh or
+not sold online — 豬血, fresh 油條, live seafood → human Box Hill trip). When
+unsure between woolies and asianpantry, prefer `[asianpantry]` for Asian-specific
+SKUs, `[woolies]` for everything mainstream. These tags drive `cart` mode's
+matching; fresh-asian items are listed for a human pickup, never auto-matched.
+
 ### Summary format
 ```
 📅 **The Week — {date range}**
