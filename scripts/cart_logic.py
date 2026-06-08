@@ -31,6 +31,9 @@ def validate_pending(p: dict) -> None:
     for section in ("woolies", "asianpantry"):
         if "items" not in p[section] or "threshold" not in p[section]:
             raise ValueError(f"{section} needs items + threshold")
+    for item in p["woolies"]["items"]:
+        if "stockcode" not in item or "qty" not in item:
+            raise ValueError(f"woolies item missing stockcode/qty: {item}")
 
 
 def save_pending(p: dict, path: pathlib.Path) -> None:

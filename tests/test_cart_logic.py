@@ -43,3 +43,13 @@ def test_validate_pending_rejects_bad_status():
            "fresh_asian": []}
     with pytest.raises(ValueError):
         cl.validate_pending(bad)
+
+
+def test_validate_pending_rejects_woolies_item_without_stockcode():
+    import pytest
+    bad = {"week_of": "x", "status": "proposed",
+           "woolies": {"items": [{"qty": 1}], "threshold": 75},
+           "asianpantry": {"items": [], "threshold": 130, "permalink": None},
+           "fresh_asian": []}
+    with pytest.raises(ValueError):
+        cl.validate_pending(bad)
