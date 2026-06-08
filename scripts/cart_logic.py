@@ -1,0 +1,45 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
+"""Pure cart logic: subtotal, threshold status, pending.json validation.
+
+No I/O beyond the optional load/save helpers. Imported by `cart` mode and Plan B.
+"""
+import json
+import pathlib
+
+VALID_STATUS = {"proposed", "approved", "filled", "failed"}
+REQUIRED = ("week_of", "status", "woolies", "asianpantry", "fresh_asian")
+
+
+def subtotal(items: list[dict]) -> float:
+    return round(sum(i["qty"] * i["price"] for i in items), 2)
+
+
+def threshold_status(sub: float, threshold: int) -> dict:
+    met = sub >= threshold
+    return {"met": met, "gap": round(max(0.0, threshold - sub), 2)}
+
+
+def validate_pending(p: dict) -> None:
+    missing = [k for k in REQUIRED if k not in p]
+    if missing:
+        raise ValueError(f"pending.json missing keys: {missing}")
+    if p["status"] not in VALID_STATUS:
+        raise ValueError(f"bad status {p['status']!r}; allowed {sorted(VALID_STATUS)}")
+    for section in ("woolies", "asianpantry"):
+        if "items" not in p[section] or "threshold" not in p[section]:
+            raise ValueError(f"{section} needs items + threshold")
+
+
+def save_pending(p: dict, path: pathlib.Path) -> None:
+    validate_pending(p)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(p, ensure_ascii=False, indent=1))
+
+
+def load_pending(path: pathlib.Path) -> dict:
+    p = json.loads(path.read_text())
+    validate_pending(p)
+    return p
