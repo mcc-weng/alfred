@@ -20,7 +20,7 @@ _CLAUDE_DEFAULT = "/Users/mikeweng/.local/bin/claude"
 def _claude_bin() -> str:
     return os.environ.get("CLAUDE_BIN", _CLAUDE_DEFAULT)
 
-CHAT_TOOLS = "Read,Glob,Grep,Bash(uv run scripts/capture.py:*)"
+CHAT_TOOLS = "Read,Glob,Bash(uv run scripts/capture.py:*)"
 RITUAL_TOOLS = (
     "Read,Glob,Grep,Write,Edit,"
     "Bash(uv run scripts/discord_io.py:*),Bash(git:*),Bash(curl:*)"

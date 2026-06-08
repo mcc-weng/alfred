@@ -8,7 +8,10 @@
       "Read(**/.env)",
       "Read(**/.env.local)",
       "Read(/Users/mikeweng/Projects/alfred/.env)",
-      "Read(/Users/mikeweng/Projects/alfred/.env.local)"
+      "Read(/Users/mikeweng/Projects/alfred/.env.local)",
+      "Grep(./.env)",
+      "Grep(.env)",
+      "Grep(**/.env)"
     ]
   }
 }

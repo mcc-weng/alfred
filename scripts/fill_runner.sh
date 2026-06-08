@@ -21,6 +21,16 @@ if [[ "${status:-}" != "approved" || "${items:-0}" -eq 0 ]]; then
     echo "$(date): nothing to fill (status=${status:-} items=${items:-0})" >> "$LOG"; exit 0
 fi
 
+# Defer to the iyf coin collector if it's mid-run — claude-in-chrome is single-session.
+IYF_LOCK="$HOME/Library/Logs/iyf-daily-coin/.collect.lock/pid"
+if [[ -f "$IYF_LOCK" ]]; then
+    iyf_pid="$(cat "$IYF_LOCK" 2>/dev/null || true)"
+    if [[ -n "$iyf_pid" ]] && kill -0 "$iyf_pid" 2>/dev/null; then
+        echo "$(date): iyf collection in progress (pid $iyf_pid) — deferring to retry" >> "$LOG"
+        exit 0
+    fi
+fi
+
 # PID-tracked single-run lock (dead-owner steal — survives crashes, no fixed timeout).
 LOCK_DIR="$LOG_DIR/.fill.lock"
 acquire() {
