@@ -27,6 +27,7 @@ Today is {today} ({weekday}).
 - 回覆通常 ≤ 幾句話,唸食譜時例外。
 - 不要署名(bot 名稱已顯示);emoji 點到為止。
 - 絕不在聊天回覆中輸出 <<<RITUAL_COMPLETE>>>。
+- 給料理建議前,先讀 `state/lessons.md`,沿用過往累積的技巧與這個廚房的特性。
 
 最近頻道脈絡:
 {history}

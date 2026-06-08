@@ -35,7 +35,7 @@ updates; craving lines feed the proposal; preference/correction lines may warran
 updating `state/preferences.md` and/or `state/woolworths.md` (handle these in
 Step 2 / Step 7 as appropriate); **lesson lines get filed into `state/lessons.md`
 under the appropriate section** (技巧 for general technique tips, 這個廚房 for
-kitchen-specific quirks, 修正 for fixes that worked). (Do NOT clear it here — it
+kitchen-specific quirks, 修正 for fixes that worked). 歸檔前先看該分類有沒有相近的心得;若有就就地更新/合併,不要重複新增(避免月積月累變雜訊)。(Do NOT clear it here — it
 is cleared in Step 8 after state is committed, so a mid-ritual error never loses
 feedback.) If the file doesn't exist, skip silently.
 
