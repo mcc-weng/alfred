@@ -29,11 +29,16 @@ RITUAL_TIMEOUT = CFG.get("ritual_timeout_hours", 3) * 3600
 TRIGGER = re.compile(
     r"\b(plan the week|alfred plan)\b|排菜單|規劃本週|規劃這週", re.IGNORECASE
 )
+CART_TRIGGER = re.compile(r"裝車|裝購物車|fill the cart", re.IGNORECASE)
 SENTINEL = "<<<RITUAL_COMPLETE>>>"
 
 
 def is_ritual_trigger(text: str) -> bool:
     return bool(TRIGGER.search(text))
+
+
+def is_cart_trigger(text: str) -> bool:
+    return bool(CART_TRIGGER.search(text))
 
 
 def ritual_complete(text: str) -> bool:
@@ -166,9 +171,18 @@ class AlfredListener(discord.Client):
         ritual_now = self.transcript.active() or any(
             is_ritual_trigger(l["content"]) for l in lines
         )
+        cart_now = (
+            not self.transcript.active()
+            and any(is_cart_trigger(l["content"]) for l in lines)
+        )
         try:
             async with channel.typing():
-                if ritual_now:
+                if cart_now:
+                    history = await self._recent_history(channel, {m.id for m in batch})
+                    reply = await asyncio.to_thread(
+                        brain.run_brain, "cart", history, lines
+                    )
+                elif ritual_now:
                     reply = await self._ritual_reply(lines)
                 else:
                     history = await self._recent_history(channel, {m.id for m in batch})

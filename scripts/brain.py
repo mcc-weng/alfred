@@ -25,7 +25,7 @@ RITUAL_TOOLS = (
     "Read,Glob,Grep,Write,Edit,"
     "Bash(uv run scripts/discord_io.py:*),Bash(git:*),Bash(curl:*)"
 )
-TIMEOUT = {"chat": 180, "ritual": 900, "nudge": 180}
+TIMEOUT = {"chat": 180, "ritual": 900, "nudge": 180, "cart": 900}
 
 
 def _config() -> dict:
@@ -56,6 +56,12 @@ def mode_args(mode: str) -> list[str]:
     if mode == "nudge":
         return ["--model", cfg.get("chat_model", "sonnet"),
                 "--allowedTools", CHAT_TOOLS]
+    if mode == "cart":
+        return ["--model", cfg.get("cart_model", cfg.get("ritual_model", "sonnet")),
+                "--allowedTools",
+                "Read,Glob,Grep,Write,Edit,"
+                "Bash(uv run scripts/woolies_search.py:*),"
+                "Bash(uv run scripts/asianpantry.py:*)"]
     return ["--model", cfg.get("chat_model", "sonnet"),
             "--allowedTools", CHAT_TOOLS]
 

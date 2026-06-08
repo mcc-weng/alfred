@@ -50,6 +50,12 @@ def test_transcript_expiry(tmp_path, monkeypatch):
     assert not t.active()
 
 
+def test_cart_trigger_detection():
+    assert listener.is_cart_trigger("小當家 裝車")
+    assert listener.is_cart_trigger("fill the cart please")
+    assert not listener.is_cart_trigger("車子壞了")
+
+
 def test_stale_transcript_cleared_on_fresh_start(tmp_path, monkeypatch):
     t = listener.Transcript(tmp_path / "ritual.json")
     t.append("user", "old ritual turn")
