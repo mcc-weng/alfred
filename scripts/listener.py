@@ -25,6 +25,7 @@ CFG = json.loads((ROOT / "config.json").read_text())
 ALFRED = int(CFG["channels"]["alfred"])
 DEBOUNCE = CFG.get("debounce_seconds", 8)
 RITUAL_TIMEOUT = CFG.get("ritual_timeout_hours", 3) * 3600
+CHAT_IDLE = CFG.get("chat_idle_minutes", 20) * 60
 
 TRIGGER = re.compile(
     r"\b(plan the week|alfred plan)\b|排菜單|規劃本週|規劃這週", re.IGNORECASE
@@ -59,8 +60,12 @@ def render_turns(turns: list[dict]) -> str:
 class Transcript:
     """Ritual conversation persisted to disk — replay-based multi-turn."""
 
-    def __init__(self, path: pathlib.Path):
+    def __init__(self, path: pathlib.Path, timeout: float | None = None):
         self.path = path
+        self._timeout = timeout  # None means "use RITUAL_TIMEOUT global at call time"
+
+    def _effective_timeout(self) -> float:
+        return self._timeout if self._timeout is not None else RITUAL_TIMEOUT
 
     def _load(self) -> dict:
         if self.path.exists():
@@ -71,7 +76,7 @@ class Transcript:
         d = self._load()
         if not d["turns"]:
             return False
-        if time.time() - (d["started"] or 0) > RITUAL_TIMEOUT:
+        if time.time() - (d["started"] or 0) > self._effective_timeout():
             return False
         return True
 
@@ -100,6 +105,7 @@ class AlfredListener(discord.Client):
         self.brain_lock = asyncio.Lock()
         self.seen_ids: set[int] = set()
         self.transcript = Transcript(RUNTIME / "ritual.json")
+        self.chat_thread = Transcript(RUNTIME / "chat.json", timeout=CHAT_IDLE)
         self.last_seen_file = RUNTIME / "last_seen"
 
     # -- persistence of last processed message id (for backfill)
@@ -186,10 +192,7 @@ class AlfredListener(discord.Client):
                 elif ritual_now:
                     reply = await self._ritual_reply(lines)
                 else:
-                    history = await self._recent_history(channel, {m.id for m in batch})
-                    reply = await asyncio.to_thread(
-                        brain.run_brain, "chat", history, lines
-                    )
+                    reply = await self._chat_reply(channel, batch, lines)
         except Exception as e:  # noqa: BLE001 — daemon must not die on one bad turn
             print(f"BRAIN ERROR: {e}", flush=True)
             await channel.send("🤵 Hit a snag thinking about that — try me again "
@@ -199,6 +202,20 @@ class AlfredListener(discord.Client):
         for chunk in split_message(reply):
             await channel.send(chunk)
         self._mark_seen(batch[-1].id)
+
+    async def _chat_reply(self, channel, batch, lines: list[dict]) -> str:
+        if not self.chat_thread.active():
+            self.chat_thread.clear()  # idle → fresh conversation
+        prior = render_turns(self.chat_thread.turns()[-30:])  # bounded
+        if prior:
+            history = [{"author": "", "content": prior}]
+        else:
+            history = await self._recent_history(channel, {m.id for m in batch})  # cold-start fallback
+        batch_text = "\n".join(f"{l['author']}: {l['content']}" for l in lines)
+        reply = await asyncio.to_thread(brain.run_brain, "chat", history, lines)
+        self.chat_thread.append("user", batch_text)
+        self.chat_thread.append("assistant", reply)
+        return reply
 
     async def _ritual_reply(self, lines: list[dict]) -> str:
         if not self.transcript.active():

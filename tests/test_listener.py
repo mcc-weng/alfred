@@ -56,6 +56,19 @@ def test_cart_trigger_detection():
     assert not listener.is_cart_trigger("車子壞了")
 
 
+def test_transcript_custom_timeout(tmp_path, monkeypatch):
+    t = listener.Transcript(tmp_path / "chat.json", timeout=-1)  # always-expired
+    t.append("user", "hi")
+    assert not t.active()  # custom timeout honored, independent of RITUAL_TIMEOUT
+
+
+def test_transcript_default_timeout_still_ritual(tmp_path, monkeypatch):
+    t = listener.Transcript(tmp_path / "r.json")  # no timeout arg → ritual default
+    t.append("user", "hi")
+    monkeypatch.setattr(listener, "RITUAL_TIMEOUT", 3 * 3600)
+    assert t.active()
+
+
 def test_stale_transcript_cleared_on_fresh_start(tmp_path, monkeypatch):
     t = listener.Transcript(tmp_path / "ritual.json")
     t.append("user", "old ritual turn")
