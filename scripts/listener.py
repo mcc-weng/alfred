@@ -31,7 +31,7 @@ TRIGGER = re.compile(
     r"\b(plan the week|alfred plan)\b|排菜單|規劃本週|規劃這週", re.IGNORECASE
 )
 CART_TRIGGER = re.compile(r"裝車|裝購物車|fill the cart", re.IGNORECASE)
-APPROVE_TRIGGER = re.compile(r"裝吧|送出|確認裝車|全加|approve cart|confirm cart", re.IGNORECASE)
+APPROVE_TRIGGER = re.compile(r"裝吧|送出購物車|確認裝車|確認送出|全加|approve cart|confirm cart", re.IGNORECASE)
 SENTINEL = "<<<RITUAL_COMPLETE>>>"
 
 

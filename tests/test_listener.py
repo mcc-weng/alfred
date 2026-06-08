@@ -74,6 +74,7 @@ def test_approve_trigger_detection():
     assert listener.is_approve_trigger("全加,送出")
     assert listener.is_approve_trigger("approve cart")
     assert not listener.is_approve_trigger("我在想要不要")
+    assert not listener.is_approve_trigger("我把照片送出去了")
 
 
 def test_stale_transcript_cleared_on_fresh_start(tmp_path, monkeypatch):
