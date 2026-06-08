@@ -7,5 +7,7 @@
   "chat_model": "sonnet",
   "ritual_model": "sonnet",
   "debounce_seconds": 8,
-  "ritual_timeout_hours": 3
+  "ritual_timeout_hours": 3,
+  "thresholds": {"woolies": 75, "asianpantry": 130},
+  "woolies_fulfillment": "delivery-trial"
 }
