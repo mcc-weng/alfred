@@ -267,6 +267,8 @@ No new files. Run on a real approved cart during the first trial shop.
 - [ ] **Step 3: Login-expired path** — if `/apis/ui/Shopper` ≠ 200, expect the "登入一下" ping and pending.json stays `approved` (retry re-tries after Mike re-logs in his normal browser).
 - [ ] **Step 4: Idempotency** — run `fill_runner.sh` again on a `filled` cart → "nothing to fill", no double-add.
 - [ ] **Step 5: Single-session check** — confirm that with an interactive Claude session open, the scheduled fill defers gracefully (logs the claude-in-chrome contention) and the retry catches it — matches iyf behavior.
+- [ ] **Step: set-absolute API verify** — in the real browser, POST a test stockcode at qty 1, then POST the same stockcode at qty 1 again → confirm the cart line reads qty 1 (NOT 2). Confirms re-POST-on-retry is a safe no-op, not a double-add. Remove the test item after.
+- [ ] **Step: iyf 9am contention** — on a day both fire, confirm the fill defers cleanly when iyf's `.collect.lock` is held (check `~/Library/Logs/alfred/fill.log` for "iyf collection in progress — deferring") and the 30-min retry then completes the fill. iyf's coin collection must NOT be disrupted.
 - [ ] **Step 6: Spec criteria** — Sunday is Discord-only for Mike (approve + tap AP link + Woolies fills itself); $0 fee read live; zero accidental checkout (no checkout code anywhere). Update `CLAUDE.md` Commands (fill_runner, install_fill, the approval flow). Commit.
 
 ---

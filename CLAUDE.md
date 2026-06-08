@@ -26,6 +26,19 @@ twenty-questions. (The project/repo name remains "Alfred".)
   (Discord display names; IDs live in config.json — internal keys never change)
 - **Nudges:** daily 09:00 dinner reminder + Sunday 16:00 ritual prompt (silent
   when nothing to say).
+- **Cart matching (v2a):** say 「裝車」in #小當家的廚房 → `cart` brain mode matches the week's
+  list to real Woolies SKUs + Asian Pantry products, proposes both carts, writes
+  `state/carts/pending.json`, posts the Asian Pantry permalink. Approve with 「裝吧」/「全加」/
+  「確認裝車」 → status flips to approved.
+- **Woolies fill (v2b):** on approval (awake) or the 9am dark-wake / 30-min retry,
+  `scripts/fill_runner.sh` runs `claude --print` + claude-in-chrome on the already-logged-in
+  browser to fill the Woolies cart, then pings #小當家的廚房. Idempotent (only fills an
+  `approved` cart). Defers if the iyf coin collector is mid-run (shared claude-in-chrome).
+  Install/refresh: `bash scripts/install_fill.sh` (rides iyf's 8:59 pmset wake — does NOT touch pmset).
+- **Feedback capture (chat):** chat appends verdicts/cravings/preferences to `state/inbox.md`
+  via `scripts/capture.py` the moment they're said; the ritual reconciles + clears it.
+- **Login:** the fill reuses the already-logged-in browser (lasts weeks). On expiry it pings
+  「登入一下」 — Mike re-logs into his normal browser once. No scripted login (account-risk).
 
 ## State (all markdown, git-versioned)
 - `state/staples.md` — assumed pantry; excluded from shopping lists unless flagged low
