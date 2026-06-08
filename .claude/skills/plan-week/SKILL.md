@@ -69,15 +69,19 @@ Default mix 3 fast + 1 batch + 2 play. Every dinner: protein ~30–40 g/serve.
 approval.
 
 ## Step 6 — Post to #本週菜單 (channel key `meal-plan`), in EXACTLY this order
-(newest message must end up being the summary)
-1. One post per dinner — full recipe, format below
-2. The Woolworths shopping list, format below
-3. "The Week" summary, format below
+(newest message must end up being the summary. **Do NOT post per-day recipes here**
+— each day's full recipe is delivered every morning by the nudge to #小當家的廚房.
+#本週菜單 is just the lean reference board: shopping + summary.)
+1. The Woolworths shopping list, format below
+2. "The Week" summary, format below
 
 Post each via stdin to handle length:
 `cat /tmp/msg.md | uv run scripts/discord_io.py post --channel meal-plan`
 
 ### Recipe format — written for BEGINNERS who want to learn
+**This full recipe is NOT posted to #本週菜單 on Sunday.** It is saved to the cookbook
+(Step 7); the morning nudge reads it and sends the day's recipe to #小當家的廚房 each
+morning. Write it in full anyway — the cookbook is the source the daily nudge pulls from.
 Mike and his gf are learning to cook. Every recipe is a LESSON, not a reminder:
 every step carries a time estimate + a **sensory cue** (看到/聽到/聞到什麼才算好)
 + the why in one clause. Never assume knowledge — explain terms inline (e.g.
@@ -146,10 +150,11 @@ matching; fresh-asian items are listed for a human pickup, never auto-matched.
 Mon · {dish} ({mode}, {min}m)
 Tue · {dish} ({mode}, {min}m)
 ...
-🛒 清單在上面 · 📖 食譜在上面 · 隨時把想吃的、好不好吃丟到 #小當家的廚房
+🛒 採買清單在上面 · 📖 每天早上我把當天的完整食譜傳到 #小當家的廚房 · 隨時把想吃的、好不好吃丟過來
 — 小當家 🔥
 ```
-(Summary in 繁體中文; day lines like 週一 · 蜜糖醬油雞腿 (fast, 30分).)
+(Summary in 繁體中文; day lines like 週一 · 蜜糖醬油雞腿 (fast, 30分). The summary
+lists the week at a glance; per-day recipes arrive via the morning nudge.)
 
 ## Step 7 — Save state
 - `state/plans/YYYY-MM-DD.md`: the locked week (dishes, modes, reasoning) + the
