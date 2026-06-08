@@ -33,9 +33,11 @@ From messages since the last plan (newest file in `state/plans/`), extract:
 it exists. Fold its lines into the harvest — verdict lines inform Step 2 cookbook
 updates; craving lines feed the proposal; preference/correction lines may warrant
 updating `state/preferences.md` and/or `state/woolworths.md` (handle these in
-Step 2 / Step 7 as appropriate). (Do NOT clear it here — it is cleared in Step 8 
-after state is committed, so a mid-ritual error never loses feedback.) If the file 
-doesn't exist, skip silently.
+Step 2 / Step 7 as appropriate); **lesson lines get filed into `state/lessons.md`
+under the appropriate section** (技巧 for general technique tips, 這個廚房 for
+kitchen-specific quirks, 修正 for fixes that worked). (Do NOT clear it here — it
+is cleared in Step 8 after state is committed, so a mid-ritual error never loses
+feedback.) If the file doesn't exist, skip silently.
 
 ## Step 2 — Process verdicts FIRST
 List `state/cookbook/` first to resolve dish slugs. For each verdict, append to
@@ -63,6 +65,9 @@ The corrected snapshot is **ephemeral**: use it for this plan, never save it.
 - `state/skills.md` — the skill curriculum: `play` meals teach the NEXT technique,
   building on 熟練 ones. Don't repeat a 熟練 technique as the lesson; do reinforce
   初試 ones if the verdict suggested a retry.
+- `state/lessons.md` — accumulated cooking know-how: apply known fixes, account
+  for kitchen quirks (e.g. if lessons say the stove runs hot, adjust heat guidance
+  in recipes; if a fix worked for a dish, bake it into the recipe steps).
 - Allergies section empty (onboarding incomplete)? Fold "any allergies I must
   know about?" into the Touchpoint 1 question — never propose before knowing.
 

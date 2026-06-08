@@ -10,7 +10,7 @@ Append-only and narrow: the only file it writes is state/inbox.md (path hardcode
 it cannot read or modify any other state. Blast radius is bounded to inbox.md.
 
 Usage: uv run scripts/capture.py <kind> "<note>"
-  kind ∈ verdict|craving|preference|correction|note
+  kind ∈ verdict|craving|preference|correction|note|lesson
 """
 import datetime
 import pathlib
@@ -18,7 +18,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 INBOX = ROOT / "state" / "inbox.md"
-KINDS = {"verdict", "craving", "preference", "correction", "note"}
+KINDS = {"verdict", "craving", "preference", "correction", "note", "lesson"}
 HEADER = ("# Capture inbox — mid-week feedback awaiting the next ritual\n"
           "<!-- Appended by chat via capture.py. The ritual reads + clears this. -->\n\n")
 
