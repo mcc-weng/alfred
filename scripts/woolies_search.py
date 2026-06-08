@@ -56,7 +56,7 @@ _NOISE = ("gravy", "mix", "flavour", "flavoured", "stock", "seasoning", "chips",
 def _score(name: str, terms: list[str]) -> float:
     toks = set(_TOKEN.findall(name.lower()))
     overlap = sum(1 for t in terms if t in toks)
-    noise = sum(1 for n in _NOISE if n in name.lower())
+    noise = sum(1 for n in _NOISE if n in toks)  # token-boundary, not substring
     return overlap - 0.5 * noise
 
 
