@@ -31,6 +31,7 @@ TRIGGER = re.compile(
     r"\b(plan the week|alfred plan)\b|排菜單|規劃本週|規劃這週", re.IGNORECASE
 )
 CART_TRIGGER = re.compile(r"裝車|裝購物車|fill the cart", re.IGNORECASE)
+APPROVE_TRIGGER = re.compile(r"裝吧|送出|確認裝車|全加|approve cart|confirm cart", re.IGNORECASE)
 SENTINEL = "<<<RITUAL_COMPLETE>>>"
 
 
@@ -40,6 +41,10 @@ def is_ritual_trigger(text: str) -> bool:
 
 def is_cart_trigger(text: str) -> bool:
     return bool(CART_TRIGGER.search(text))
+
+
+def is_approve_trigger(text: str) -> bool:
+    return bool(APPROVE_TRIGGER.search(text))
 
 
 def ritual_complete(text: str) -> bool:
@@ -179,9 +184,8 @@ class AlfredListener(discord.Client):
         ritual_now = self.transcript.active() or any(
             is_ritual_trigger(l["content"]) for l in lines
         )
-        cart_now = (
-            not self.transcript.active()
-            and any(is_cart_trigger(l["content"]) for l in lines)
+        cart_now = not self.transcript.active() and any(
+            is_cart_trigger(l["content"]) or is_approve_trigger(l["content"]) for l in lines
         )
         try:
             async with channel.typing():
@@ -203,6 +207,21 @@ class AlfredListener(discord.Client):
         for chunk in split_message(reply):
             await channel.send(chunk)
         self._mark_seen(batch[-1].id)
+        if cart_now:
+            await self._maybe_fill_if_awake()
+
+    async def _maybe_fill_if_awake(self) -> None:
+        pending = ROOT / "state" / "carts" / "pending.json"
+        try:
+            status = json.loads(pending.read_text()).get("status") if pending.exists() else None
+        except Exception:
+            status = None
+        if status == "approved":
+            # awake path: best-effort kick; fill_runner.sh is the real idempotency guard.
+            # (fill_runner.sh is created in v2b Task 2; until then this no-ops harmlessly.)
+            await asyncio.create_subprocess_exec(
+                "bash", str(ROOT / "scripts" / "fill_runner.sh"),
+                stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
 
     async def _chat_reply(self, channel, batch, lines: list[dict]) -> str:
         if not self.chat_thread.active():

@@ -69,6 +69,13 @@ def test_transcript_default_timeout_still_ritual(tmp_path, monkeypatch):
     assert t.active()
 
 
+def test_approve_trigger_detection():
+    assert listener.is_approve_trigger("裝吧")
+    assert listener.is_approve_trigger("全加,送出")
+    assert listener.is_approve_trigger("approve cart")
+    assert not listener.is_approve_trigger("我在想要不要")
+
+
 def test_stale_transcript_cleared_on_fresh_start(tmp_path, monkeypatch):
     t = listener.Transcript(tmp_path / "ritual.json")
     t.append("user", "old ritual turn")
