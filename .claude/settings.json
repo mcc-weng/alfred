@@ -1,5 +1,14 @@
 {
   "permissions": {
-    "deny": ["Read(./.env)", "Read(.env)"]
+    "deny": [
+      "Read(.env)",
+      "Read(./.env)",
+      "Read(.env.local)",
+      "Read(./.env.local)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(/Users/mikeweng/Projects/alfred/.env)",
+      "Read(/Users/mikeweng/Projects/alfred/.env.local)"
+    ]
   }
 }
