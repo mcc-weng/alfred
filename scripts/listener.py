@@ -187,6 +187,7 @@ class AlfredListener(discord.Client):
         cart_now = not self.transcript.active() and any(
             is_cart_trigger(l["content"]) or is_approve_trigger(l["content"]) for l in lines
         )
+        ritual_done = False
         try:
             async with channel.typing():
                 if cart_now:
@@ -195,7 +196,7 @@ class AlfredListener(discord.Client):
                         brain.run_brain, "cart", history, lines
                     )
                 elif ritual_now:
-                    reply = await self._ritual_reply(lines)
+                    reply, ritual_done = await self._ritual_reply(lines)
                 else:
                     reply = await self._chat_reply(channel, batch, lines)
         except Exception as e:  # noqa: BLE001 — daemon must not die on one bad turn
@@ -209,6 +210,8 @@ class AlfredListener(discord.Client):
         self._mark_seen(batch[-1].id)
         if cart_now:
             await self._maybe_fill_if_awake()
+        if ritual_done:
+            await self._auto_propose_cart(channel, batch)
 
     async def _maybe_fill_if_awake(self) -> None:
         pending = ROOT / "state" / "carts" / "pending.json"
@@ -237,7 +240,7 @@ class AlfredListener(discord.Client):
         self.chat_thread.append("assistant", reply)
         return reply
 
-    async def _ritual_reply(self, lines: list[dict]) -> str:
+    async def _ritual_reply(self, lines: list[dict]) -> tuple[str, bool]:
         if not self.transcript.active():
             self.transcript.clear()  # fresh trigger after expiry/abandonment: never inherit a stale transcript
         batch_text = "\n".join(f"{l['author']}: {l['content']}" for l in lines)
@@ -256,7 +259,21 @@ class AlfredListener(discord.Client):
         self.transcript.append("assistant", reply)
         if done:
             self.transcript.clear()
-        return reply
+        return reply, done
+
+    async def _auto_propose_cart(self, channel, batch) -> None:
+        """After the ritual completes, auto-run cart mode to propose the cart."""
+        try:
+            await channel.send("🛒 小當家:菜單鎖定!我來看看要買什麼…")
+            history = await self._recent_history(channel, {m.id for m in batch})
+            reply = await asyncio.to_thread(
+                brain.run_brain, "cart", history,
+                [{"author": "小當家", "content": "(ritual just finished — 自動裝車:讀最新計畫,配對商品,提出採買提案)"}])
+            for chunk in split_message(reply):
+                await channel.send(chunk)
+        except Exception as e:  # never let the auto-chain crash the daemon
+            print(f"AUTO-CART ERROR: {e}", flush=True)
+            await channel.send("🛒 (自動裝車沒成功,你直接說「裝車」我再來一次)")
 
 
 def main() -> None:

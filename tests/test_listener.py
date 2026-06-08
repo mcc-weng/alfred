@@ -77,6 +77,18 @@ def test_approve_trigger_detection():
     assert not listener.is_approve_trigger("我把照片送出去了")
 
 
+def test_ritual_reply_returns_tuple_shape():
+    """_ritual_reply is async/Discord-bound so we just verify the sentinel logic
+    that underpins the tuple's second element."""
+    # done=True path
+    text_done = "Great plan!\n<<<RITUAL_COMPLETE>>>"
+    assert listener.ritual_complete(text_done) is True
+    assert "<<<" not in listener.strip_sentinel(text_done)
+    # done=False path
+    text_mid = "What time works for dinner?"
+    assert listener.ritual_complete(text_mid) is False
+
+
 def test_stale_transcript_cleared_on_fresh_start(tmp_path, monkeypatch):
     t = listener.Transcript(tmp_path / "ritual.json")
     t.append("user", "old ritual turn")
