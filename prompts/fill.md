@@ -9,7 +9,7 @@ session)。完全自動完成,不要問任何確認。
 3. 確認登入:在頁面執行
    `await fetch('/apis/ui/Shopper',{credentials:'include'}).then(r=>r.status)`。
    若不是 200 → 跑
-   `uv run scripts/discord_io.py post --channel alfred --content "🛒 小當家:Woolies 登入過期了,開一下 app/瀏覽器登入,我下次再裝。"`
+   `uv run scripts/discord_io.py post --channel alfred --content "🛒 Woolies 登入過期了,開一下 app/瀏覽器登入,我下次再裝。"`
    然後印 `FILL: NOT_LOGGED_IN` 結束(pending.json 維持 approved 讓 retry 再試)。
 4. 對 woolies.items 的每一項,在頁面執行(stockcode/quantity 用該項的值):
    `await fetch('/apis/ui/Trolley/Items',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({stockcode:<sc>,quantity:<qty>,source:'ProductDetail'})}).then(r=>r.status)`
@@ -44,13 +44,13 @@ session)。完全自動完成,不要問任何確認。
 7. 貼 Discord 到 #小當家的廚房(channel alfred),依情況選擇訊息:
 
    **情況 A(全部成功)**:
-   `uv run scripts/discord_io.py post --channel alfred --content "🛒 小當家:Woolies 購物車裝好了 — N 項,小計 $X,<免運✅ 或 運費$Y>。打開 Woolies app 結帳就好。"`
+   `uv run scripts/discord_io.py post --channel alfred --content "🛒 Woolies 購物車裝好了 — N 項,小計 $X,<免運✅ 或 運費$Y>。打開 Woolies app 結帳就好。"`
 
    **情況 B(有 permanent 失敗)**:
-   `uv run scripts/discord_io.py post --channel alfred --content "🛒 小當家:Woolies 購物車裝好了 — N 項已就緒,小計 $X,<免運✅ 或 運費$Y>。⚠️ M 項無法加入(可能缺貨,手動補一下):item1、item2…。打開 Woolies app 結帳就好。"`
+   `uv run scripts/discord_io.py post --channel alfred --content "🛒 Woolies 購物車裝好了 — N 項已就緒,小計 $X,<免運✅ 或 運費$Y>。⚠️ M 項無法加入(可能缺貨,手動補一下):item1、item2…。打開 Woolies app 結帳就好。"`
 
    **情況 C(有 transient 失敗)**:
-   `uv run scripts/discord_io.py post --channel alfred --content "🛒 小當家:部分項目暫時失敗,稍後自動重試 (M 項)。"`
+   `uv run scripts/discord_io.py post --channel alfred --content "🛒 部分項目暫時失敗,稍後自動重試(M 項)。"`
 
 8. 依情況印出結束碼:
    - 情況 A → `FILL: DONE`

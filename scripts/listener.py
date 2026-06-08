@@ -271,7 +271,7 @@ class AlfredListener(discord.Client):
             print("auto-cart: no fresh plan written today — skipping (ritual may have errored)", flush=True)
             return
         try:
-            await channel.send("🛒 小當家:菜單鎖定!我來看看要買什麼…")
+            await channel.send("🛒 菜單鎖定!我來看看要買什麼…")
             history = await self._recent_history(channel, {m.id for m in batch})
             reply = await asyncio.to_thread(
                 brain.run_brain, "cart", history,
@@ -280,7 +280,7 @@ class AlfredListener(discord.Client):
                 await channel.send(chunk)
         except Exception as e:  # never let the auto-chain crash the daemon
             print(f"AUTO-CART ERROR: {e}", flush=True)
-            await channel.send("🛒 (自動裝車沒成功,你直接說「裝車」我再來一次)")
+            await channel.send("🛒 (自動裝車沒成功,你直接說「裝車」我再來一次。)")
 
 
 def main() -> None:
