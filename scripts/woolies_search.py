@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = []
+# dependencies = ["certifi"]
 # ///
 """Woolworths product search (public API, stdlib). Read-only, no auth.
 
@@ -11,6 +11,7 @@ import argparse
 import http.cookiejar
 import json
 import re
+import ssl
 import sys
 import urllib.parse
 import urllib.request
@@ -19,10 +20,20 @@ API = "https://www.woolworths.com.au/apis/ui/Search/products"
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 
+# macOS: use certifi certs if available, else fall back to default context
+try:
+    import certifi
+    _SSL_CTX = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _SSL_CTX = ssl.create_default_context()
+
 
 def _opener():
     jar = http.cookiejar.CookieJar()
-    op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+    op = urllib.request.build_opener(
+        urllib.request.HTTPSHandler(context=_SSL_CTX),
+        urllib.request.HTTPCookieProcessor(jar),
+    )
     op.addheaders = [("User-Agent", UA), ("Accept", "application/json, text/plain, */*")]
     return op
 

@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["certifi"]
 # ///
-"""Asian Pantry (Shopify) catalog client + cart permalink builder. stdlib.
+"""Asian Pantry (Shopify) catalog client + cart permalink builder.
 
 Usage:
   uv run scripts/asianpantry.py search "tapioca starch" [--limit 5]
@@ -12,6 +12,7 @@ import argparse
 import json
 import ssl
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -48,7 +49,7 @@ def search(term: str, limit: int = 5) -> list[dict]:
             v = pj["variants"][0]
             out.append({"variant_id": v["id"], "title": pj["title"],
                         "price": float(v["price"]) / 100, "available": v["available"]})
-        except Exception:
+        except (urllib.error.URLError, KeyError, IndexError, json.JSONDecodeError, ValueError):
             continue
     return out
 
