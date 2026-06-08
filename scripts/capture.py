@@ -6,7 +6,8 @@
 
 Chat mode may call this (and ONLY this) to durably capture a verdict/craving/
 preference/correction the instant it's said. The Sunday ritual reads + clears it.
-Append-only by design — cannot modify or read other state (injection-safe).
+Append-only and narrow: the only file it writes is state/inbox.md (path hardcoded);
+it cannot read or modify any other state. Blast radius is bounded to inbox.md.
 
 Usage: uv run scripts/capture.py <kind> "<note>"
   kind ∈ verdict|craving|preference|correction|note

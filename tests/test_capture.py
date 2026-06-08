@@ -20,6 +20,6 @@ def test_append_creates_and_appends(tmp_path):
     capture.append_note(f, "2026-06-09", "craving", "want 滷肉飯")
     capture.append_note(f, "2026-06-09", "verdict", "salmon banger")
     body = f.read_text()
-    assert body.count("\n- ") == 2 or body.count("- ") == 2
+    assert body.count("\n- ") == 2
     assert "want 滷肉飯" in body and "salmon banger" in body
     assert body.startswith("#")  # has a header when first created

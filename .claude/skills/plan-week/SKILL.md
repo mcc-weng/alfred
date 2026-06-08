@@ -33,14 +33,9 @@ From messages since the last plan (newest file in `state/plans/`), extract:
 it exists. Fold its lines into the harvest — verdict lines inform Step 2 cookbook
 updates; craving lines feed the proposal; preference/correction lines may warrant
 updating `state/preferences.md` and/or `state/woolworths.md` (handle these in
-Step 2 / Step 7 as appropriate). After reading, **clear the inbox** by writing
-just the header back:
-```
-# Capture inbox — mid-week feedback awaiting the next ritual
-<!-- Appended by chat via capture.py. The ritual reads + clears this. -->
-
-```
-This ensures next week starts fresh. If the file doesn't exist, skip silently.
+Step 2 / Step 7 as appropriate). (Do NOT clear it here — it is cleared in Step 8 
+after state is committed, so a mid-ritual error never loses feedback.) If the file 
+doesn't exist, skip silently.
 
 ## Step 2 — Process verdicts FIRST
 List `state/cookbook/` first to resolve dish slugs. For each verdict, append to
@@ -181,7 +176,9 @@ lists the week at a glance; per-day recipes arrive via the morning nudge.)
 
 ## Step 8 — Close the ritual
 Remind Mike: *"Order's ready to tap into the Woolies app — aim for a Monday
-slot."* Then: `git add state/ && git commit -m "ritual: week of YYYY-MM-DD"`
+slot."* Then: `git add state/ && git commit -m "ritual: week of YYYY-MM-DD"`. 
+Finally, clear state/inbox.md (if it exists) by writing just its header back 
+(the two header lines + a blank line) — its feedback is now persisted into state.
 
 ## Hard rules
 - Allergies are absolute. Dislikes need an explicit request to override.
