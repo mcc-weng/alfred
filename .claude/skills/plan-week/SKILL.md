@@ -46,14 +46,18 @@ the matching `state/cookbook/<slug>.md` under `## Verdicts`:
 not a verdict; carry it as context for the proposal, don't create a file. Bangers
 become rotation candidates; "no repeat" verdicts are excluded from future plans.
 
-## Step 3 — Inventory (Touchpoint 1)
-Download the fridge photo: `curl -s -o /tmp/fridge.jpg "<attachment url>"`, then
-Read it. No photo in the channel? Ask Mike to paste one into the session.
-Still none handy? Proceed without inventory: plan from staples + cravings, lean
-shelf-stable, flag a likely mid-week top-up. Don't burn a touchpoint chasing it.
-List every perishable you can identify, grouped (veg / protein / dairy / other).
-Then ask ONE question: *"Anything hidden — crisper, leftovers, freezer plans?"*
-The corrected snapshot is **ephemeral**: use it for this plan, never save it.
+## Step 3 — Inventory & intent (Touchpoint 1) — FLEXIBLE START
+The week can start any way they like — meet them where they are. Accept any of:
+- **A fridge photo** → download (`curl -s -o /tmp/fridge.jpg "<attachment url>"`) + Read it.
+- **A text description** ("還有雞胸、青菜、豆腐;想吃清爽點") → just use it as the inventory + craving.
+- **Only cravings/ideas** ("這週想吃辣的、來點新菜") → plan from those + staples.
+- **Nothing / "隨便你"** → surprise them: plan from staples, cravings, rotation, the skill
+  curriculum; flag a likely mid-week top-up.
+Whatever they gave, list what you'll build around (perishables grouped veg/protein/dairy,
+plus their stated cravings/mood). Then ask ONE light question to fill the gap —
+e.g. *"冰箱還有什麼要先用掉的嗎?或這週有特別想吃/不想吃的?"* Don't insist on a photo,
+don't burn the touchpoint chasing inventory. The corrected snapshot is **ephemeral**:
+use it for this plan, never save it.
 
 ## Step 4 — Read state before proposing
 - `state/preferences.md` — allergies are HARD constraints; week shape defaults
