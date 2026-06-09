@@ -27,7 +27,7 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 - [ ] B5 💬 **Allergen named in a craving** (a no-go item) → silently substituted/dropped, no extra question
 
 ## C. Chat & memory (mid-week)
-- [ ] C1 ✅ 💬 Verdict ("牛排超讚") → captured to inbox *(passed in testing)*
+- [x] C1 ✅ 💬 Verdict ("牛排超讚") → captured to inbox *(passed in testing)*
 - [ ] C2 💬 Craving ("下週想吃韓式") → captured
 - [ ] C3 💬 Preference change ("我們不太吃豬肝了") → captured (preference)
 - [ ] C4 💬 Lesson ("原來脆皮要把皮擦超乾") → captured (lesson) → filed to lessons.md at next ritual
@@ -40,7 +40,7 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 - [ ] C11 💬 Persona holds: 小當家/中華一番, 繁中, even if messaged in English
 
 ## D. Daily nudge
-- [ ] D1 ✅ 🔧 Morning nudge posts today's full recipe *(passed after fix)*
+- [x] D1 ✅ 🔧 Morning nudge posts today's full recipe *(passed after fix; re-confirmed live 2026-06-09 — auto-picked 週二 餛飩麵 on a non-Monday)*
 - [ ] D2 🔧 Silent on Sunday / no-dinner day
 - [ ] D3 💬 Prep-ahead notes appear (defrost/marinate) when the dish needs them
 
@@ -56,7 +56,7 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 - [x] E9 ✅ 🤖 Asian Pantry permalink resolves to a real pre-filled cart *(selftest)*
 
 ## F. Fill & safety
-- [ ] F1 ✅ 🔧 Awake fill: approval → fill → cart populated → live subtotal+fee → ping *(passed in testing)*
+- [x] F1 ✅ 🔧 Awake fill: approval → fill → cart populated → live subtotal+fee → ping *(passed in testing)*
 - [ ] F2 🔧 Self-heal: partial-fail stays `approved` + retries (I can simulate)
 - [ ] F3 🔧 Login-expired → pings "登入一下", stays approved (I can simulate)
 - [x] F4 ✅ 🤖 Idempotency: re-run on a non-approved cart → "nothing to fill", no double *(selftest)*
@@ -71,6 +71,7 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 - [ ] G4 💬 Two people: gf's messages + cravings handled alongside Mike's
 - [ ] G5 💬 Long recipe (>2000 chars) splits into multiple messages cleanly
 - [ ] G6 🔧 Sunday 4pm reminder nudge fires (ritual prompt)
+- [x] G7 ✅ 🔧 Single-instance guard: stray `uv run listener.py` bails (flock on `.runtime/listener.lock`), live daemon undisturbed, holder PID preserved *(built + verified live 2026-06-09)*
 
 ## H. Deferred — next week / multi-week
 - [ ] H1 🗓 Dark-wake fill (approve → close lid → fills on 9am wake)
@@ -88,6 +89,20 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 - [x] P2 ✅ 🤖 `uv run scripts/selftest.py` → 7/7 (woolies+AP search live, AP permalink, cart_logic, capture, fill-guard, .env-deny)
 
 ---
+
+## Dry-run findings (2026-06-09) — found & fixed
+The first live Discord dry run surfaced 4 issues (all in plumbing, not the brain — the
+ritual/cart/nudge logic passed). Recorded here so they're not re-discovered:
+1. **Duplicate daemon** — a stray `uv run listener.py` overlapped launchd's copy → every
+   message processed twice. **Fixed:** flock single-instance guard (G7), verified live.
+2. **Cart output formatting** — markdown tables don't render in Discord; redundant "小當家:"
+   prefix; process narration ("Finalize 完成…", "pending.json 已寫入"); mixed 中/英 jargon.
+   **Fixed:** `prompts/cart.md` rewritten to line-based all-繁中 report.
+3. **Approval reply leaked internals** — told Mike to run `bash scripts/fill_runner.sh`
+   manually. **Fixed:** `prompts/cart.md` approval rule — short warm confirm, daemon auto-fills.
+4. **Fill blocked by single-session** — an active interactive Claude session blocks the
+   fill brain's claude-in-chrome; it correctly fell back + suppressed a false "登入過期".
+   **Not a bug** — works at dark-wake / session-free moment. Stays manual (A9/F1).
 
 ## What's automated vs not (honest boundary)
 - **🤖 Automated (`pytest` + `selftest.py`):** all pure logic, both live search APIs, AP permalink resolution, the fill guard, `.env` hardening, message-splitting. Run these anytime — they have zero side effects.

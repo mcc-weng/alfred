@@ -10,7 +10,9 @@ persisted to .runtime/ritual.json (survives daemon restarts).
 """
 import asyncio
 import datetime
+import fcntl
 import json
+import os
 import pathlib
 import re
 import time
@@ -283,10 +285,38 @@ class AlfredListener(discord.Client):
             await channel.send("🛒 (自動裝車沒成功,你直接說「裝車」我再來一次。)")
 
 
+def _acquire_single_instance_lock():
+    """Refuse to start if another listener is already running.
+
+    Holds an exclusive flock on .runtime/listener.lock for the whole process
+    lifetime. The OS releases the lock the instant this process dies — even on
+    SIGKILL — so there is no stale-lock to clean up and a crashed daemon never
+    blocks its own launchd respawn. The caller MUST keep the returned handle
+    alive; closing it drops the lock. This is what stops a stray
+    `uv run scripts/listener.py` from overlapping launchd's copy and
+    double-processing every message (the bug found in the 2026-06-09 dry run).
+    """
+    # Open WITHOUT truncating so a stray instance that bails never wipes the
+    # holder's diagnostic PID. Only after we own the lock do we rewrite it.
+    fd = os.open(RUNTIME / "listener.lock", os.O_RDWR | os.O_CREAT, 0o644)
+    lock_file = os.fdopen(fd, "r+")
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        print("listener: another instance already holds .runtime/listener.lock "
+              "— exiting to avoid duplicate message processing", flush=True)
+        raise SystemExit(0)
+    lock_file.seek(0)
+    lock_file.truncate()
+    lock_file.write(f"{os.getpid()}\n")
+    lock_file.flush()
+    return lock_file
+
+
 def main() -> None:
     load_env()
-    import os
     RUNTIME.mkdir(exist_ok=True)
+    _lock = _acquire_single_instance_lock()  # noqa: F841 — held for process lifetime
     attach_dir = RUNTIME / "attachments"
     if attach_dir.exists():
         cutoff = time.time() - 14 * 86400
