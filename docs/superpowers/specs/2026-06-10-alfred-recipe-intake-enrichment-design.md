@@ -122,6 +122,25 @@ Per `alfred-verify-via-real-use` — verify through real Discord use, no harness
 - A recipe touching a **known preference/dislike** (e.g. a coriander-heavy dish) → 小當家 flags it / suggests a swap in `💡 建議`, source unchanged.
 - Confirm the `📌` original block is **always** present and matches the source.
 
+## Refinements (locked during inline build + eval loop — 2026-06-10)
+
+Tuned by running 3 real recipes (trivial milk-mochi, simple-technique 番茄炒蛋, complex
+韓式炸雞) through the chat brain headlessly and inspecting the cards. Final decisions,
+now reflected in `prompts/chat.md` (commit `5a0f421`):
+
+- **Labels are 繁中** (`**食材**` / `**步驟**`), matching the ritual recipe voice — **not**
+  the English `**Ingredients:**` / `**Steps:**` the original draft specified. (Nothing
+  parses these labels; confirmed by grep.)
+- **"Middle" transformation dial:** 小當家 **preserves the source's step backbone — no
+  adding, splitting, or merging numbered steps** (a too-dense source step may get
+  sub-bullets *under* that step, never a new numbered step). Rich teaching rides as
+  indented inline annotations; the body's step count mirrors the source.
+- **Depth ladder sharpened:** a dish with no real technique (stir, boil) gets **食材 +
+  步驟 + inline tips and NO section boxes at all**. Only technique-heavy dishes (fry, sear,
+  ferment, multi-component) promote `🔪 備料` / `⚠️ 新手最容易翻車` / `🔥 主廚秘訣` /
+  `✅ 怎麼知道完成了`. A complex-dish `⚠️` recap that echoes inline cautions is fine (matches
+  the ritual), but simple dishes are never padded with empty section headers.
+
 ## Future (out of this change)
 
 - A `--orig-servings` (and/or `--scaled-servings`) metadata flag on `save_recipe.py` if the ritual later wants to re-scale cookbook recipes programmatically.
