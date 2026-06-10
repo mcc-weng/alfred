@@ -67,9 +67,10 @@ Two helper scripts, following the existing `capture.py` / `woolies_search.py` pa
 so the brain never touches raw `yt-dlp`/`ffmpeg`/`Write`:
 
 **1. `scripts/recipe_intake.py`** — the extractor. Subcommands:
-- `caption <url>` → prints title, uploader, duration, and the full caption/description
-  via `yt-dlp --skip-download --print`. For YouTube, also pulls auto-subtitles if
-  present. Fast, no download. This is the primary path.
+- `caption <url>` → prints title, uploader, duration, the full caption/description, and
+  an `is_thin` hint, via `yt-dlp -j --skip-download`. Fast, no download. This is the
+  primary path. (YouTube auto-subtitles are deferred to Future — the frames path covers
+  the same caption-less gap without VTT parsing.)
 - `frames <url>` → downloads the clip (`yt-dlp -f mp4/best`), samples ~8–12 frames with
   `ffmpeg` into `.runtime/recipe_frames/<id>/`, prints the frame paths for the brain to
   `Read`. Bounded by: max frame count, max download size, and max duration guards (skip
@@ -178,5 +179,7 @@ real Discord usage:
 
 - Whisper audio transcription as an on-demand opt-in for narration-only videos (async,
   modeled on `fill_runner.sh`).
+- YouTube auto-subtitle ingestion (`--write-auto-subs` + VTT parsing) for long-form
+  cooking videos where the narration carries the recipe.
 - Optional "want it this week?" → nudge the current plan instead of only next week's.
 - Recipe-intake → cart pre-match (rung 4) once the base loop is proven in real use.
