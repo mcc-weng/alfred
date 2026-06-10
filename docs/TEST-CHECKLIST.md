@@ -42,7 +42,7 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 ## D. Daily nudge
 - [x] D1 ✅ 🔧 Morning nudge posts today's full recipe *(passed after fix; re-confirmed live 2026-06-09 — auto-picked 週二 餛飩麵 on a non-Monday)*
 - [ ] D2 🔧 Silent on Sunday / no-dinner day
-- [ ] D3 💬 Prep-ahead notes appear (defrost/marinate) when the dish needs them
+- [x] D3 ✅ 💬 Prep-ahead notes appear (defrost/marinate) when the dish needs them *(verified live 2026-06-10 — 週三 牛排 nudge LED with "現在就要做:牛排回溫40分", repeated it in mise en place, and named the play technique)*
 
 ## E. Cart & threshold edge cases
 - [ ] E1 💬 Under threshold → proposes top-ups from buffer to reach free delivery
