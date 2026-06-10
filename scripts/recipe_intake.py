@@ -56,11 +56,14 @@ def frame_timestamps(duration: float, max_frames: int = MAX_FRAMES) -> list[floa
 
 
 def _probe_duration(mp4: pathlib.Path) -> float:
-    out = subprocess.run(
-        [_bin("ffprobe", "FFPROBE_BIN"), "-v", "error", "-show_entries",
-         "format=duration", "-of", "csv=p=0", str(mp4)],
-        capture_output=True, timeout=30,
-    )
+    try:
+        out = subprocess.run(
+            [_bin("ffprobe", "FFPROBE_BIN"), "-v", "error", "-show_entries",
+             "format=duration", "-of", "csv=p=0", str(mp4)],
+            capture_output=True, timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        return 0.0
     try:
         return float(out.stdout.decode().strip())
     except ValueError:
@@ -68,14 +71,20 @@ def _probe_duration(mp4: pathlib.Path) -> float:
 
 
 def cmd_caption(url: str) -> dict:
-    out = subprocess.run(
-        [_bin("yt-dlp", "YT_DLP_BIN"), "-j", "--skip-download",
-         "--no-warnings", "--no-playlist", url],
-        capture_output=True, timeout=60,
-    )
+    try:
+        out = subprocess.run(
+            [_bin("yt-dlp", "YT_DLP_BIN"), "-j", "--skip-download",
+             "--no-warnings", "--no-playlist", url],
+            capture_output=True, timeout=60,
+        )
+    except subprocess.TimeoutExpired:
+        return {"error": "timeout"}
     if out.returncode != 0:
         return {"error": out.stderr.decode()[:300]}
-    info = json.loads(out.stdout.decode())
+    try:
+        info = json.loads(out.stdout.decode())
+    except json.JSONDecodeError:
+        return {"error": "bad json from yt-dlp"}
     fields = extract_fields(info)
     fields["is_thin"] = is_thin(fields["description"])
     return fields
@@ -87,22 +96,28 @@ def cmd_frames(url: str) -> dict:
     workdir = FRAME_DIR / vid
     workdir.mkdir(exist_ok=True)
     mp4 = workdir / "clip.mp4"
-    dl = subprocess.run(
-        [_bin("yt-dlp", "YT_DLP_BIN"), "-f", "mp4/best", "--no-warnings",
-         "--no-playlist", "--max-filesize", MAX_FILESIZE, "-o", str(mp4), url],
-        capture_output=True, timeout=120,
-    )
+    try:
+        dl = subprocess.run(
+            [_bin("yt-dlp", "YT_DLP_BIN"), "-f", "mp4/best", "--no-warnings",
+             "--no-playlist", "--max-filesize", MAX_FILESIZE, "-o", str(mp4), url],
+            capture_output=True, timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        return {"error": "timeout", "frames": []}
     if dl.returncode != 0 or not mp4.exists():
-        return {"error": "download failed or file too large", "frames": []}
+        return {"error": dl.stderr.decode()[:200] or "download failed", "frames": []}
     frames = []
     for i, ts in enumerate(frame_timestamps(_probe_duration(mp4))):
         fp = workdir / f"frame_{i:02d}.jpg"
-        subprocess.run(
-            [_bin("ffmpeg", "FFMPEG_BIN"), "-hide_banner", "-loglevel", "error",
-             "-ss", str(ts), "-i", str(mp4), "-frames:v", "1", "-q:v", "3",
-             "-y", str(fp)],
-            capture_output=True, timeout=30,
-        )
+        try:
+            subprocess.run(
+                [_bin("ffmpeg", "FFMPEG_BIN"), "-hide_banner", "-loglevel", "error",
+                 "-ss", str(ts), "-i", str(mp4), "-frames:v", "1", "-q:v", "3",
+                 "-y", str(fp)],
+                capture_output=True, timeout=30,
+            )
+        except subprocess.TimeoutExpired:
+            continue
         if fp.exists():
             frames.append(str(fp))
     return {"frames": frames}

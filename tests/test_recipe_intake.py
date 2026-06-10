@@ -48,3 +48,14 @@ def test_frame_timestamps_short_clip():
 
 def test_frame_timestamps_zero_duration():
     assert ri.frame_timestamps(0) == [0.0]
+
+
+def test_frame_timestamps_sub_three_second_clip():
+    # int(1.5 // 3) == 0, so the `or 1` guard must yield exactly one frame
+    ts = ri.frame_timestamps(1.5, max_frames=10)
+    assert ts == [0.75]
+
+
+def test_is_thin_long_no_digit_is_thin():
+    # 60+ chars but no digits → still thin (a recipe needs quantities)
+    assert ri.is_thin("這是一段很長的純文字描述完全沒有任何數字只是介紹這道料理多好吃多美味多適合全家一起享用真的很棒喔") is True
