@@ -73,6 +73,31 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 - [ ] G6 🔧 Sunday 4pm reminder nudge fires (ritual prompt)
 - [x] G7 ✅ 🔧 Single-instance guard: stray `uv run listener.py` bails (flock on `.runtime/listener.lock`), live daemon undisturbed, holder PID preserved *(built + verified live 2026-06-09)*
 
+## R. Recipe intake (v3 — drop a recipe → enriched cookbook card + queued craving)
+**Doors (each → enriched 繁中 card saved + craving queued):**
+- [x] R1 ✅ 💬 **IG/YT video link** → listener pre-fetches caption → card saved *(live 2026-06-11 — 家常鹽水雞)*
+- [ ] R2 💬 **Recipe webpage URL** → WebFetch reads the page → card saved
+- [ ] R3 💬 **Screenshot / image / PDF** → Read (vision) → card saved
+- [ ] R4 💬 **Pasted recipe text** → parsed in place → card saved
+- [ ] R5 💬 **Non-recipe link** (news / funny reel) → normal chat, **nothing saved** (negative case)
+- [ ] R6 💬 **Thin / no-caption video** → frames fallback (download + vision); if all fails → asks for a screenshot / dish name
+
+**Card quality (the enrichment):**
+- [x] R7 ✅ 💬 **Scaled to 2人份**, original serving count shown; awkward fractions flagged, no "0.5 顆蛋" *(live 2026-06-11 — 原1支雞腿 → 2支)*
+- [x] R8 ✅ 💬 **Simple dish → inline tips only, NO section boxes** *(live 2026-06-11)*
+- [ ] R9 💬 **Complex/technique dish** (fry/sear/ferment/multi-component) → `🔪備料`/`⚠️新手翻車`/`🔥主廚秘訣`/`✅怎麼知道完成了` sections appear, no inline↔section duplication *(headless-verified 炸雞 2026-06-10; live pending)*
+- [x] R10 ✅ 💬 **Pantry-aware** — staples (芝麻香油/薑/蒜…) tagged "(pantry 已有)" from `staples.md` *(live 2026-06-11)*
+- [ ] R11 💬 **Dislike flagged** — recipe with 香菜/芹菜/皮蛋/豬肉 → `💡 建議` raises a swap/ask, **source unchanged**
+
+**Faithfulness + the bugs we fixed:**
+- [x] R12 ✅ 💬 **📌 原始食譜 verbatim block always present**; all 小當家 additions marked 🔥/⚠️/💡 *(live 2026-06-11)*
+- [x] R13 ✅ 💬 **Discord reply includes the full 📌 block** (mirrors the saved file, not trimmed) *(bug fixed + live 2026-06-11)*
+- [x] R14 ✅ 💬 **No history-anchoring** — a recipe dropped after a *different* one in recent history saves the NEW dish, not the old *(bug fixed + live 2026-06-11 — 鹽水雞 dropped after milk-mochi context)*
+- [x] R15 ✅ 💬 **No process narration** — clean card, never "已存入…/等待批准傳送" *(bug fixed + live 2026-06-11)*
+- [ ] R16 💬 **Dedup** — re-drop a recipe already in cookbook → replies "之前存過了", no duplicate file/craving
+- [x] R17 ✅ 🤖 Unit tests: URL detect + caption injection (listener), slugify + cookbook/craving format (save_recipe), is_thin + frame_timestamps + extract_fields (recipe_intake) *(pytest)*
+- [ ] R18 🗓 Queued recipe craving surfaces in the next Sunday ritual's harvest (inbox→ritual)
+
 ## H. Deferred — next week / multi-week
 - [ ] H1 🗓 Dark-wake fill (approve → close lid → fills on 9am wake)
 - [ ] H2 🗓 iyf 9am contention → fill defers while coin collector runs (check fill.log)
@@ -85,7 +110,7 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 - [ ] H9 🗓 Fulfillment switch delivery-trial → pickup (threshold $75→$50, trial cancel)
 
 ## Plumbing self-test (run anytime — `scripts/selftest.py` automates the 🤖 items)
-- [x] P1 ✅ 🤖 `uv run --with pytest --with discord.py pytest tests/ -v` → 46 passed
+- [x] P1 ✅ 🤖 `uv run --with pytest --with discord.py pytest tests/ -v` → 67 passed
 - [x] P2 ✅ 🤖 `uv run scripts/selftest.py` → 7/7 (woolies+AP search live, AP permalink, cart_logic, capture, fill-guard, .env-deny)
 
 ---
