@@ -83,3 +83,13 @@ def test_chat_tools_include_recipe_intake_seams():
     assert "scripts/save_recipe.py" in brain.CHAT_TOOLS
     # and must keep its existing capture seam
     assert "scripts/capture.py" in brain.CHAT_TOOLS
+
+
+def test_chat_prompt_has_recipe_enrichment():
+    # The recipe-intake card must instruct: keep the verbatim source (📌 原始食譜),
+    # scale servings, and offer 小當家's teaching sections. Guard against a future
+    # chat.md edit silently dropping the enrichment + faithfulness block.
+    p = brain.build_prompt("chat", history=[], messages=[])
+    assert "原始食譜" in p          # the verbatim provenance block
+    assert "2 人份" in p            # scale-to-household instruction
+    assert "主廚秘訣" in p          # on-demand teaching section
