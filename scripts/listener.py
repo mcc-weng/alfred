@@ -20,6 +20,7 @@ import time
 import discord
 
 import brain
+import recipe_intake
 from discord_io import load_env, split_message
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -63,6 +64,40 @@ def render_turns(turns: list[dict]) -> str:
     for t in turns:
         out.append(t["content"] if t["role"] == "user" else f"Alfred: {t['content']}")
     return "\n".join(out)
+
+
+# Recipe-source links (IG reel/post, YouTube). Used to DETERMINISTICALLY fetch the
+# caption for the link in THIS message before the brain runs — so the brain enriches
+# the exact dropped recipe instead of anchoring on a recipe in the chat history
+# (the 2026-06-10 bug: a 鹽水雞 reel was dropped, brain re-saved milk-mochi from history).
+RECIPE_URL_RE = re.compile(
+    r"https?://(?:www\.|m\.)?(?:"
+    r"instagram\.com/(?:reel|reels|p|tv)/"
+    r"|youtube\.com/(?:watch|shorts)"
+    r"|youtu\.be/"
+    r")[^\s]*",
+    re.IGNORECASE,
+)
+
+
+def extract_recipe_url(text: str) -> str | None:
+    m = RECIPE_URL_RE.search(text)
+    return m.group(0) if m else None
+
+
+def format_caption_injection(url: str, caption: dict) -> str:
+    """Inline annotation appended to the message content the brain sees, carrying the
+    pre-fetched recipe for `url` plus a hard guard against history-anchoring."""
+    if caption.get("error"):
+        return (f"\n[系統:已嘗試抓取 {url} 但沒拿到文字食譜({caption['error'][:80]})。"
+                f"→ 改用 recipe_intake.py frames 看影格,或請對方截圖/說菜名。]")
+    return (
+        f"\n[系統已自動抓取「這則訊息裡的連結」{url} 的食譜 — "
+        f"**請只用這一份來做食譜卡,絕對不要從聊天記錄挪用別道菜**:\n"
+        f"title: {caption.get('title', '')}\n"
+        f"is_thin: {caption.get('is_thin', False)}\n"
+        f"description:\n{caption.get('description', '')}\n]"
+    )
 
 
 class Transcript:
@@ -229,6 +264,23 @@ class AlfredListener(discord.Client):
                 "bash", str(ROOT / "scripts" / "fill_runner.sh"),
                 stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
 
+    async def _inject_recipe_captions(self, lines: list[dict]) -> None:
+        """For any IG/YT link in the batch, pre-fetch its caption and append it to the
+        message the brain sees — so the brain enriches the EXACT dropped recipe and
+        cannot anchor on a recipe sitting in the chat history."""
+        for line in lines:
+            url = extract_recipe_url(line["content"])
+            if not url:
+                continue
+            try:
+                # in-process (no `uv run` subprocess → no PATH dependency); cmd_caption
+                # itself returns {"error": ...} on yt-dlp failure rather than raising.
+                caption = await asyncio.to_thread(recipe_intake.cmd_caption, url)
+            except Exception as e:  # noqa: BLE001 — never let intake prep crash the turn
+                print(f"caption inject failed for {url}: {e}", flush=True)
+                continue
+            line["content"] += format_caption_injection(url, caption)
+
     async def _chat_reply(self, channel, batch, lines: list[dict]) -> str:
         if not self.chat_thread.active():
             self.chat_thread.clear()  # idle → fresh conversation
@@ -237,7 +289,8 @@ class AlfredListener(discord.Client):
             history = [{"author": "", "content": prior}]
         else:
             history = await self._recent_history(channel, {m.id for m in batch})  # cold-start fallback
-        batch_text = "\n".join(f"{l['author']}: {l['content']}" for l in lines)
+        batch_text = "\n".join(f"{l['author']}: {l['content']}" for l in lines)  # store original — no caption bloat
+        await self._inject_recipe_captions(lines)  # deterministic: fetch THIS link's recipe before the brain runs
         reply = await asyncio.to_thread(brain.run_brain, "chat", history, lines)
         self.chat_thread.append("user", batch_text)
         self.chat_thread.append("assistant", reply)

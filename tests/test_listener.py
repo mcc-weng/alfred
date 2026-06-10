@@ -89,6 +89,35 @@ def test_ritual_reply_returns_tuple_shape():
     assert listener.ritual_complete(text_mid) is False
 
 
+def test_extract_recipe_url_instagram():
+    url = "https://www.instagram.com/reel/DYXDnWfPROW/?igsh=NnBqcTR1cjVxNTky"
+    assert listener.extract_recipe_url(f"看這個 {url}") == url
+
+
+def test_extract_recipe_url_youtube():
+    assert listener.extract_recipe_url("recipe https://youtu.be/abc123 yum") == \
+        "https://youtu.be/abc123"
+    assert listener.extract_recipe_url("https://www.youtube.com/shorts/xY9_z") == \
+        "https://www.youtube.com/shorts/xY9_z"
+
+
+def test_extract_recipe_url_none_for_non_recipe_links():
+    assert listener.extract_recipe_url("今晚吃什麼?") is None
+    assert listener.extract_recipe_url("see https://example.com/foo") is None
+
+
+def test_format_caption_injection_carries_recipe_and_anti_anchor_guard():
+    cap = {"title": "家常鹽水雞", "description": "雞腿1支、香菇、薑片", "is_thin": False}
+    out = listener.format_caption_injection("https://insta/reel/x", cap)
+    assert "家常鹽水雞" in out and "雞腿1支" in out      # the actual fetched recipe
+    assert "聊天記錄" in out                              # anti-history-anchoring guard
+
+
+def test_format_caption_injection_error_tells_brain_to_fall_back():
+    out = listener.format_caption_injection("https://insta/reel/x", {"error": "login wall"})
+    assert "frames" in out or "截圖" in out               # frames / ask-for-screenshot fallback
+
+
 def test_stale_transcript_cleared_on_fresh_start(tmp_path, monkeypatch):
     t = listener.Transcript(tmp_path / "ritual.json")
     t.append("user", "old ritual turn")

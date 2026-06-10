@@ -10,6 +10,12 @@
     <string>/Users/mikeweng/Projects/alfred/scripts/listener.py</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/mikeweng/Projects/alfred</string>
+  <!-- launchd's default PATH lacks /opt/homebrew/bin; the listener now resolves
+       yt-dlp/ffmpeg (via recipe_intake.cmd_caption) so it needs them on PATH. -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
   <key>StandardOutPath</key><string>/Users/mikeweng/Projects/alfred/.runtime/listener.log</string>
   <key>StandardErrorPath</key><string>/Users/mikeweng/Projects/alfred/.runtime/listener.err</string>
   <key>RunAtLoad</key><true/>
