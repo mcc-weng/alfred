@@ -24,12 +24,21 @@ def test_mode_args_chat_is_readonly():
     args = brain.mode_args("chat")
     assert "--allowedTools" in args
     tools = args[args.index("--allowedTools") + 1]
-    # Chat must never have general Write/Edit; only the scoped capture script Bash is allowed
+    # Chat must never have a general Write/Edit tool; it writes ONLY through vetted scripts.
     assert "Write" not in tools and "Edit" not in tools
-    assert "Bash(uv run scripts/capture.py:*)" in tools
-    # No other Bash scopes allowed in chat
-    other_bash = tools.replace("Bash(uv run scripts/capture.py:*)", "")
-    assert "Bash" not in other_bash
+    # The only Bash scopes permitted are the three vetted recipe-intake / capture seams.
+    vetted = [
+        "Bash(uv run scripts/capture.py:*)",
+        "Bash(uv run scripts/recipe_intake.py:*)",
+        "Bash(uv run scripts/save_recipe.py:*)",
+    ]
+    for scope in vetted:
+        assert scope in tools
+    remaining = tools
+    for scope in vetted:
+        remaining = remaining.replace(scope, "")
+    # No arbitrary / unscoped Bash beyond the vetted scripts.
+    assert "Bash" not in remaining
 
 
 def test_mode_args_ritual_has_scoped_bash():
@@ -65,3 +74,12 @@ def test_run_brain_raises_on_nonzero_exit(tmp_path):
             brain.run_brain("chat", history=[], messages=[{"author": "M", "content": "x"}])
     finally:
         del os.environ["CLAUDE_BIN"]
+
+
+def test_chat_tools_include_recipe_intake_seams():
+    # chat mode must be able to fetch sources and save recipes (recipe intake)
+    assert "WebFetch" in brain.CHAT_TOOLS
+    assert "scripts/recipe_intake.py" in brain.CHAT_TOOLS
+    assert "scripts/save_recipe.py" in brain.CHAT_TOOLS
+    # and must keep its existing capture seam
+    assert "scripts/capture.py" in brain.CHAT_TOOLS
