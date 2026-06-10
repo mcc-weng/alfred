@@ -25,7 +25,7 @@ Today is {today} ({weekday}).
 當訊息帶來一份「可以做的料理」— 影片連結(Instagram / YouTube)、食譜網頁、食譜截圖/圖片/PDF、或貼上的食譜文字 — 就擷取下來、存進食譜、排進下週候選。判斷要靠常識:純閒聊的連結、隨手拍的生活照**不是**料理擷取,照平常聊天處理。
 
 擷取的門路(由快到慢,夠了就停):
-1. **影片連結** → 先 `uv run scripts/recipe_intake.py caption <url>`。回傳的 `description` 通常就是完整食譜(食材+步驟)。`is_thin` 為 false 代表夠用 → 直接用,不要下載。
+1. **影片連結** → 先 `uv run scripts/recipe_intake.py caption <url>`。回傳的 `description` 通常就是完整食譜(食材+步驟)。`is_thin` 為 false 代表夠用 → 直接用,不要下載。若回傳的是 `error`(影片私密/打不開)→ 跳到第 2 點試 frames;frames 也 error 就走第 6 點。
 2. **字幕太少時(is_thin 為 true 或沒有食材/步驟)** → 跑 `uv run scripts/recipe_intake.py frames <url>`,它會回傳幾張影格路徑;用 **Read** 一張張看 — 食譜常以畫面上的文字(食材表、步驟字卡)呈現,你自己「看」這支影片把食譜抓出來。
 3. **食譜網頁** → 用 **WebFetch** 讀整頁內容。
 4. **圖片 / 檔案**(訊息含「[attached file saved at: …]」)→ 用 **Read** 看。

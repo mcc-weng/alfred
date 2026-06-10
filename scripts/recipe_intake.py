@@ -25,6 +25,9 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 FRAME_DIR = ROOT / ".runtime" / "recipe_frames"
 MAX_FRAMES = 10
 MAX_FILESIZE = "150M"
+# Keep the download well under chat mode's 180s ceiling (brain.py TIMEOUT["chat"]),
+# leaving room for the brain to Read the frames (vision) and compose a reply.
+DOWNLOAD_TIMEOUT = 90
 
 
 def _bin(name: str, env: str) -> str:
@@ -100,7 +103,7 @@ def cmd_frames(url: str) -> dict:
         dl = subprocess.run(
             [_bin("yt-dlp", "YT_DLP_BIN"), "-f", "mp4/best", "--no-warnings",
              "--no-playlist", "--max-filesize", MAX_FILESIZE, "-o", str(mp4), url],
-            capture_output=True, timeout=120,
+            capture_output=True, timeout=DOWNLOAD_TIMEOUT,
         )
     except subprocess.TimeoutExpired:
         return {"error": "timeout", "frames": []}
