@@ -27,13 +27,17 @@ twenty-questions. (The project/repo name remains "Alfred".)
 - **Nudges:** daily 09:00 dinner reminder + Sunday 16:00 ritual prompt (silent
   when nothing to say).
 - **Recipe intake (v3):** drop a recipe source in #小當家的廚房 — IG/YT link, recipe
-  webpage, screenshot/image, or pasted text — and `chat` mode extracts it, saves a 繁中
-  card to `state/cookbook/`, and queues a craving in `state/inbox.md` for the next ritual
-  (rides the existing reconcile loop; never edits the locked week). Caption-first
-  (`scripts/recipe_intake.py caption` via yt-dlp); if the caption is thin it downloads +
-  samples frames (`recipe_intake.py frames` → ffmpeg) and reads them with vision. Writes
-  go only through the vetted seam `scripts/save_recipe.py` (cookbook + craving, dedup by
-  slug). Chat-mode tools were widened to add `WebFetch` + those two scripts.
+  webpage, screenshot/image, or pasted text — and `chat` mode turns it into an enriched
+  繁中 teaching card (小當家's voice: inline tips, scaled to 2人份, on-demand 備料/翻車/
+  秘訣/完成 sections for technique-heavy dishes), **preserving the exact source verbatim
+  as a 📌 原始食譜 block**, saves it to `state/cookbook/`, and queues a craving in
+  `state/inbox.md` for the next ritual (rides the reconcile loop; never edits the locked
+  week). For an IG/YT link the **listener deterministically pre-fetches the link's caption**
+  (`recipe_intake.cmd_caption`, in-process) and injects it so the brain enriches the exact
+  dropped recipe — not one anchored from chat history. Caption-first; if thin, the brain
+  samples frames (`recipe_intake.py frames` → ffmpeg) and reads them with vision. Writes go
+  only through the vetted seam `scripts/save_recipe.py` (cookbook + craving, dedup by slug).
+  Chat-mode tools were widened to add `WebFetch` + those two scripts.
 - **Cart matching (v2a):** say 「裝車」in #小當家的廚房 → `cart` brain mode matches the week's
   list to real Woolies SKUs + Asian Pantry products, proposes both carts, writes
   `state/carts/pending.json`, posts the Asian Pantry permalink. Approve with 「裝吧」/「全加」/
