@@ -30,7 +30,7 @@ RITUAL_TOOLS = (
     "Read,Glob,Grep,Write,Edit,"
     "Bash(uv run scripts/discord_io.py:*),Bash(git:*),Bash(curl:*)"
 )
-TIMEOUT = {"chat": 180, "ritual": 900, "nudge": 180, "cart": 900}
+TIMEOUT = {"chat": 240, "ritual": 900, "nudge": 180, "cart": 900}  # chat 240: recipe enrichment from a rich Gemini understanding is the heaviest chat turn
 
 
 def _config() -> dict:
