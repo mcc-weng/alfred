@@ -59,3 +59,33 @@ def test_frame_timestamps_sub_three_second_clip():
 def test_is_thin_long_no_digit_is_thin():
     # 60+ chars but no digits → still thin (a recipe needs quantities)
     assert ri.is_thin("這是一段很長的純文字描述完全沒有任何數字只是介紹這道料理多好吃多美味多適合全家一起享用真的很棒喔") is True
+
+
+def test_is_youtube():
+    assert ri.is_youtube("https://youtu.be/abc")
+    assert ri.is_youtube("https://www.youtube.com/watch?v=abc")
+    assert ri.is_youtube("https://www.youtube.com/shorts/abc")
+    assert not ri.is_youtube("https://www.instagram.com/reel/abc")
+
+
+def test_gemini_prompt_includes_caption_and_verbatim_ask():
+    p = ri._gemini_prompt("黑糖 30g、水 300g")
+    assert "黑糖 30g" in p          # caption fused in
+    assert "原文食譜" in p          # asks Gemini to quote source verbatim (for 📌)
+    assert "完整理解" in p          # asks for comprehensive understanding, not flat recipe
+
+
+def test_gemini_prompt_no_caption_omits_caption_block():
+    assert "貼文文字" not in ri._gemini_prompt("")
+
+
+def test_file_state_reads_enum_or_str():
+    class S: name = "ACTIVE"
+    class F: state = S()
+    assert ri._file_state(F()) == "ACTIVE"
+    class F2: state = "processing"
+    assert ri._file_state(F2()) == "PROCESSING"
+
+
+def test_scene_filter_builds_threshold_expr():
+    assert ri.scene_filter(0.3) == "select='gt(scene,0.3)'"
