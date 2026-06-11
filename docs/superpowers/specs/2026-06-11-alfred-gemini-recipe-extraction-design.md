@@ -43,6 +43,23 @@ reels/week) at $0.
 Same seam as today's deterministic caption pre-fetch — the listener does extraction *before*
 the brain so 小當家 enriches the exact dropped recipe (the history-anchoring fix stays intact).
 
+### Source routing — Gemini is ONLY for video links
+
+The listener's `extract_recipe_url` regex matches **only Instagram (reel/p/tv) and YouTube
+(watch/shorts/youtu.be)** links. Routing is by source type; Gemini never runs for non-video
+sources:
+
+| Dropped source | Handler | Gemini? |
+|---|---|---|
+| **IG / YouTube video link** | listener pre-fetches via `cmd_gemini` | ✅ yes |
+| **Recipe webpage / blog URL** | 小當家 reads it with `WebFetch` (unchanged) | ❌ no |
+| **Image / screenshot / PDF** | 小當家 reads it with `Read` (vision, unchanged) | ❌ no |
+| **Pasted recipe text** | 小當家 parses the message (unchanged) | ❌ no |
+| **Non-recipe link** | normal chat, nothing saved (unchanged) | ❌ no |
+
+A bare webpage URL simply fails `extract_recipe_url` → the listener injects nothing → the brain
+falls to its WebFetch door. No download, no Gemini call, no API cost for non-video sources.
+
 ### New / changed components
 
 **`scripts/recipe_intake.py` — new `cmd_gemini(url) -> dict`**
