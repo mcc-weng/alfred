@@ -128,3 +128,15 @@ def test_stale_transcript_cleared_on_fresh_start(tmp_path, monkeypatch):
     t.append("user", "new ritual turn")
     assert t.active()              # started was reset — second turn will route to ritual
     assert len(t.turns()) == 1     # no leaked history
+
+
+def test_format_understanding_injection_carries_text_and_guard():
+    out = listener.format_understanding_injection(
+        "https://insta/reel/x", {"source": "gemini", "understanding": "家常鹽水雞:雞腿1支..."})
+    assert "家常鹽水雞" in out          # the Gemini understanding
+    assert "聊天記錄" in out            # anti-history-anchoring guard
+    assert "原始食譜" in out            # tells 小當家 to preserve the verbatim original
+
+
+def test_format_understanding_injection_none_on_error():
+    assert listener.format_understanding_injection("u", {"error": "quota"}) is None

@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["discord.py"]
+# dependencies = ["discord.py", "google-genai"]
 # ///
 """Alfred's ears: Discord gateway daemon.
 
@@ -97,6 +97,19 @@ def format_caption_injection(url: str, caption: dict) -> str:
         f"title: {caption.get('title', '')}\n"
         f"is_thin: {caption.get('is_thin', False)}\n"
         f"description:\n{caption.get('description', '')}\n]"
+    )
+
+
+def format_understanding_injection(url: str, result: dict) -> str | None:
+    """Inject Gemini's comprehensive video understanding for the brain. Returns None on
+    error so the caller can fall back to the caption."""
+    if result.get("error") or not result.get("understanding"):
+        return None
+    return (
+        f"\n[系統已用 Gemini 看完「這則訊息裡的影片」{url},完整理解如下 — "
+        f"**請只用這一份來做食譜卡,絕對不要從聊天記錄挪用別道菜**;"
+        f"把其中「原文食譜」那段的食材/步驟原文放進 📌 原始食譜區塊:\n"
+        f"{result['understanding']}\n]"
     )
 
 
@@ -264,22 +277,27 @@ class AlfredListener(discord.Client):
                 "bash", str(ROOT / "scripts" / "fill_runner.sh"),
                 stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
 
-    async def _inject_recipe_captions(self, lines: list[dict]) -> None:
-        """For any IG/YT link in the batch, pre-fetch its caption and append it to the
-        message the brain sees — so the brain enriches the EXACT dropped recipe and
-        cannot anchor on a recipe sitting in the chat history."""
+    async def _inject_recipe_context(self, lines: list[dict]) -> None:
+        """For any IG/YT link, pre-fetch the recipe BEFORE the brain — Gemini watches the
+        video (richest); fall back to caption if Gemini errors/times-out/has no key. Either
+        way the brain enriches the EXACT dropped recipe, never one from chat history."""
         for line in lines:
             url = extract_recipe_url(line["content"])
             if not url:
                 continue
             try:
-                # in-process (no `uv run` subprocess → no PATH dependency); cmd_caption
-                # itself returns {"error": ...} on yt-dlp failure rather than raising.
-                caption = await asyncio.to_thread(recipe_intake.cmd_caption, url)
-            except Exception as e:  # noqa: BLE001 — never let intake prep crash the turn
-                print(f"caption inject failed for {url}: {e}", flush=True)
-                continue
-            line["content"] += format_caption_injection(url, caption)
+                g = await asyncio.to_thread(recipe_intake.cmd_gemini, url)
+            except Exception as e:  # noqa: BLE001
+                g = {"error": str(e)[:120]}
+            inj = format_understanding_injection(url, g)
+            if inj is None:  # Gemini unavailable → deterministic caption fallback
+                try:
+                    cap = await asyncio.to_thread(recipe_intake.cmd_caption, url)
+                except Exception as e:  # noqa: BLE001 — never let intake prep crash the turn
+                    print(f"recipe pre-fetch failed for {url}: {e}", flush=True)
+                    continue
+                inj = format_caption_injection(url, cap)
+            line["content"] += inj
 
     async def _chat_reply(self, channel, batch, lines: list[dict]) -> str:
         if not self.chat_thread.active():
@@ -290,7 +308,7 @@ class AlfredListener(discord.Client):
         else:
             history = await self._recent_history(channel, {m.id for m in batch})  # cold-start fallback
         batch_text = "\n".join(f"{l['author']}: {l['content']}" for l in lines)  # store original — no caption bloat
-        await self._inject_recipe_captions(lines)  # deterministic: fetch THIS link's recipe before the brain runs
+        await self._inject_recipe_context(lines)  # deterministic: Gemini/caption pre-fetch before the brain
         reply = await asyncio.to_thread(brain.run_brain, "chat", history, lines)
         self.chat_thread.append("user", batch_text)
         self.chat_thread.append("assistant", reply)
