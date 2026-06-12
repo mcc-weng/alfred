@@ -32,12 +32,16 @@ twenty-questions. (The project/repo name remains "Alfred".)
   秘訣/完成 sections for technique-heavy dishes), **preserving the exact source verbatim
   as a 📌 原始食譜 block**, saves it to `state/cookbook/`, and queues a craving in
   `state/inbox.md` for the next ritual (rides the reconcile loop; never edits the locked
-  week). For an IG/YT link the **listener deterministically pre-fetches the link's caption**
-  (`recipe_intake.cmd_caption`, in-process) and injects it so the brain enriches the exact
-  dropped recipe — not one anchored from chat history. Caption-first; if thin, the brain
-  samples frames (`recipe_intake.py frames` → ffmpeg) and reads them with vision. Writes go
-  only through the vetted seam `scripts/save_recipe.py` (cookbook + craving, dedup by slug).
-  Chat-mode tools were widened to add `WebFetch` + those two scripts.
+  week). For an IG/YT link the **listener pre-fetches via Gemini** (`recipe_intake.cmd_gemini`,
+  free tier, `GEMINI_API_KEY` in `.env`): Gemini watches the video + fuses the caption into a
+  comprehensive understanding, injected so the brain **distills** the exact dropped recipe —
+  not one anchored from chat history. IG = download+upload; YouTube = URL-direct. Fallback if
+  Gemini is down/keyless: caption-only → frames (`recipe_intake.py frames`, ffmpeg
+  scene-detection + vision) → ask for a screenshot. Webpage→WebFetch, image→Read, text→parse
+  (no Gemini). Writes go only through the vetted seam `scripts/save_recipe.py` (cookbook +
+  craving, dedup by slug) — **invoked via a `uv run`-prefixed heredoc, never a `… |` pipe
+  (the Bash allowlist only matches commands starting with the allowed prefix)**. Chat-mode
+  tools: `Read,Glob,WebFetch` + capture/recipe_intake/save_recipe scripts.
 - **Cart matching (v2a):** say 「裝車」in #小當家的廚房 → `cart` brain mode matches the week's
   list to real Woolies SKUs + Asian Pantry products, proposes both carts, writes
   `state/carts/pending.json`, posts the Asian Pantry permalink. Approve with 「裝吧」/「全加」/
@@ -61,6 +65,6 @@ twenty-questions. (The project/repo name remains "Alfred".)
 - **Fridge inventory is EPHEMERAL — never write fridge contents to state**
 
 ## Rules
-- `.env` holds `DISCORD_BOT_TOKEN` — never commit it, never print it
+- `.env` holds secrets (`DISCORD_BOT_TOKEN`, `GEMINI_API_KEY`, Woolworths creds) — never commit it, never print it
 - `config.json` holds channel IDs (not secret)
 - After a ritual: commit state changes with message `ritual: week of YYYY-MM-DD`
