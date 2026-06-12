@@ -75,12 +75,12 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 
 ## R. Recipe intake (v3 — drop a recipe → enriched cookbook card + queued craving)
 **Doors (each → enriched 繁中 card saved + craving queued):**
-- [x] R1 ✅ 💬 **IG/YT video link** → listener pre-fetches caption → card saved *(live 2026-06-11 — 家常鹽水雞)*
+- [x] R1 ✅ 💬 **IG/YT video link** → listener pre-fetches (now via Gemini — see Gemini block) → card saved *(live 2026-06-11 家常鹽水雞 · 2026-06-12 蔥香雞腿)*
 - [ ] R2 💬 **Recipe webpage URL** → WebFetch reads the page → card saved
 - [ ] R3 💬 **Screenshot / image / PDF** → Read (vision) → card saved
 - [ ] R4 💬 **Pasted recipe text** → parsed in place → card saved
 - [ ] R5 💬 **Non-recipe link** (news / funny reel) → normal chat, **nothing saved** (negative case)
-- [ ] R6 💬 **Thin / no-caption video** → frames fallback (download + vision); if all fails → asks for a screenshot / dish name
+- [ ] R6 💬 **Thin / no-caption video** → Gemini handles most; if Gemini is unavailable → frames fallback (scene-detection + vision); if all fails → asks for a screenshot / dish name
 
 **Card quality (the enrichment):**
 - [x] R7 ✅ 💬 **Scaled to 2人份**, original serving count shown; awkward fractions flagged, no "0.5 顆蛋" *(live 2026-06-11 — 原1支雞腿 → 2支)*
@@ -95,8 +95,18 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 - [x] R14 ✅ 💬 **No history-anchoring** — a recipe dropped after a *different* one in recent history saves the NEW dish, not the old *(bug fixed + live 2026-06-11 — 鹽水雞 dropped after milk-mochi context)*
 - [x] R15 ✅ 💬 **No process narration** — clean card, never "已存入…/等待批准傳送" *(bug fixed + live 2026-06-11)*
 - [ ] R16 💬 **Dedup** — re-drop a recipe already in cookbook → replies "之前存過了", no duplicate file/craving
-- [x] R17 ✅ 🤖 Unit tests: URL detect + caption injection (listener), slugify + cookbook/craving format (save_recipe), is_thin + frame_timestamps + extract_fields (recipe_intake) *(pytest)*
+- [x] R17 ✅ 🤖 Unit tests: URL detect + caption/understanding injection (listener), slugify + cookbook/craving format (save_recipe), is_thin/frame_timestamps/extract_fields/is_youtube/_gemini_prompt/scene_filter (recipe_intake) *(pytest, 74)*
 - [ ] R18 🗓 Queued recipe craving surfaces in the next Sunday ritual's harvest (inbox→ritual)
+
+**Gemini video extraction (v3.3 — listener pre-fetches via Gemini, free tier; `GEMINI_API_KEY` in `.env`):**
+- [x] G1 ✅ 💬 **IG reel → Gemini watches video + fuses caption** → card richer than caption alone (timing/火候/技巧 cues Gemini saw in the video) *(live-verified 2026-06-12 — 蔥香雞腿)*
+- [ ] G2 💬 **YouTube link → Gemini URL-direct** (no download) — confirm no `g_*` dir under `.runtime/recipe_frames/` for it
+- [x] G3 ✅ 💬 **Understanding distilled, not dumped** — focused card per the depth ladder, not the whole Gemini blob *(live 2026-06-12 — 755-char card from a long understanding)*
+- [ ] G4 💬 **Caption fallback** — Gemini down / no key / quota → still saves via caption-only, no crash *(headless-verified; live pending)*
+- [x] G5 ✅ 💬 **Heredoc save** — `save_recipe.py` runs via `uv run … <<'CARD'` (not `… |` pipe); **no "權限待批准" denial** *(bug fixed + verified 2026-06-12)*
+- [x] G6 ✅ 💬 **240s enrichment budget** — a rich understanding enriches without the 180s timeout *(verified 2026-06-12 — 106s headless)*
+- [ ] G7 💬 **Routing: only IG/YT links hit Gemini** — webpage→WebFetch, image→Read, text→parse; confirm no download/API call for a blog URL
+- [ ] G8 🗓 **Ritual posts via input-redirect** (`uv run discord_io.py post … < /tmp/msg.md`, not `cat … |`) — Sunday #本週菜單 post not blocked by the tightened allowlist *(fix shipped 2026-06-12; live-verify next ritual)*
 
 ## H. Deferred — next week / multi-week
 - [ ] H1 🗓 Dark-wake fill (approve → close lid → fills on 9am wake)
@@ -110,7 +120,7 @@ Tags: 🤖 = covered by `scripts/selftest.py` (automatable) · 💬 = needs a re
 - [ ] H9 🗓 Fulfillment switch delivery-trial → pickup (threshold $75→$50, trial cancel)
 
 ## Plumbing self-test (run anytime — `scripts/selftest.py` automates the 🤖 items)
-- [x] P1 ✅ 🤖 `uv run --with pytest --with discord.py pytest tests/ -v` → 67 passed
+- [x] P1 ✅ 🤖 `uv run --with pytest --with discord.py pytest tests/ -v` → 74 passed
 - [x] P2 ✅ 🤖 `uv run scripts/selftest.py` → 7/7 (woolies+AP search live, AP permalink, cart_logic, capture, fill-guard, .env-deny)
 
 ---
