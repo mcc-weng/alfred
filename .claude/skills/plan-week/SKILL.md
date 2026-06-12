@@ -92,8 +92,10 @@ approval.
 1. The Woolworths shopping list, format below
 2. "The Week" summary, format below
 
-Post each via stdin to handle length:
-`cat /tmp/msg.md | uv run scripts/discord_io.py post --channel meal-plan`
+Post each via stdin to handle length. **The command MUST start with `uv run` (use input
+redirect `< file`, NOT a `cat … |` pipe — the pipe form starts with `cat` and is blocked by
+the Bash allowlist):**
+`uv run scripts/discord_io.py post --channel meal-plan < /tmp/msg.md`
 
 ### Recipe format — written for BEGINNERS who want to learn
 **This full recipe is NOT posted to #本週菜單 on Sunday.** It is saved to the cookbook
