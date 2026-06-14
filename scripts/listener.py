@@ -9,7 +9,6 @@ Backfills missed messages on connect. Ritual mode = multi-turn transcript replay
 persisted to .runtime/ritual.json (survives daemon restarts).
 """
 import asyncio
-import datetime
 import fcntl
 import json
 import os
@@ -36,11 +35,31 @@ TRIGGER = re.compile(
 )
 CART_TRIGGER = re.compile(r"裝車|裝購物車|fill the cart", re.IGNORECASE)
 APPROVE_TRIGGER = re.compile(r"裝吧|送出購物車|確認裝車|確認送出|全加|approve cart|confirm cart", re.IGNORECASE)
+# Lock/go words: the menu was negotiated and they want to lock it in. These ALSO enter
+# ritual mode — the only mode with Write/git/discord_io to write the plan + post the list.
+# (Bug 2026-06-14: chat mode advertised 「出發」 then thrashed 240s with no tools to lock.)
+LOCK_TRIGGER = re.compile(r"出發|出发|鎖定|锁定|\block (it|in|the plan)\b|\blocked\b", re.IGNORECASE)
 SENTINEL = "<<<RITUAL_COMPLETE>>>"
 
 
 def is_ritual_trigger(text: str) -> bool:
     return bool(TRIGGER.search(text))
+
+
+def is_lock_trigger(text: str) -> bool:
+    return bool(LOCK_TRIGGER.search(text))
+
+
+def plan_freshly_written(plans_dir: pathlib.Path, window: float = 600.0) -> bool:
+    """True if the most-recently-modified plan file was written within `window` seconds.
+    Gate on mtime, NOT filename date: plan files are named for the week-START date, which
+    is usually not the ritual-run date (Bug 2026-06-14: Sun-run wrote a Mon-named plan →
+    `stem.startswith(today)` never matched → auto-cart silently skipped)."""
+    files = list(plans_dir.glob("*.md")) if plans_dir.exists() else []
+    if not files:
+        return False
+    newest = max(files, key=lambda p: p.stat().st_mtime)
+    return (time.time() - newest.stat().st_mtime) < window
 
 
 def is_cart_trigger(text: str) -> bool:
@@ -231,9 +250,11 @@ class AlfredListener(discord.Client):
         channel = batch[0].channel
         lines = await self._to_lines(batch)
         batch_text = "\n".join(f"{l['author']}: {l['content']}" for l in lines)
-        # cart is one-shot (only when no active ritual); ritual precedence below
+        # cart is one-shot (only when no active ritual); ritual precedence below.
+        # lock words (出發/鎖定/lock it) auto-start the ritual — the only mode that can
+        # actually write the plan + post the list (Bug 2026-06-14: chat couldn't, thrashed).
         ritual_now = self.transcript.active() or any(
-            is_ritual_trigger(l["content"]) for l in lines
+            is_ritual_trigger(l["content"]) or is_lock_trigger(l["content"]) for l in lines
         )
         cart_now = not self.transcript.active() and any(
             is_cart_trigger(l["content"]) or is_approve_trigger(l["content"]) for l in lines
@@ -338,10 +359,8 @@ class AlfredListener(discord.Client):
     async def _auto_propose_cart(self, channel, batch) -> None:
         """After the ritual completes, auto-run cart mode to propose the cart."""
         plans_dir = ROOT / "state" / "plans"
-        today = datetime.datetime.now().strftime("%Y-%m-%d")
-        plan_files = sorted(plans_dir.glob("*.md")) if plans_dir.exists() else []
-        if not plan_files or not plan_files[-1].stem.startswith(today):
-            print("auto-cart: no fresh plan written today — skipping (ritual may have errored)", flush=True)
+        if not plan_freshly_written(plans_dir):
+            print("auto-cart: no plan written in the last 10 min — skipping (ritual may have errored)", flush=True)
             return
         try:
             await channel.send("🛒 菜單鎖定!我來看看要買什麼…")

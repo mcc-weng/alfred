@@ -69,6 +69,28 @@ def test_transcript_default_timeout_still_ritual(tmp_path, monkeypatch):
     assert t.active()
 
 
+def test_lock_trigger_detection():
+    # The menu was negotiated; lock words route into ritual mode (the only mode that
+    # can write the plan + post the list). Bug 2026-06-14: chat mode advertised
+    # 「出發」 then thrashed 240s with no tools to lock.
+    assert listener.is_lock_trigger("出發")
+    assert listener.is_lock_trigger("好,出發!")
+    assert listener.is_lock_trigger("鎖定這份")
+    assert listener.is_lock_trigger("lock it in")
+    assert listener.is_lock_trigger("locked")
+    assert not listener.is_lock_trigger("今晚吃什麼")
+    assert not listener.is_lock_trigger("我把照片送出去了")   # 送出 ≠ 出發
+    assert not listener.is_lock_trigger("blocked the road")    # no false match inside 'blocked'
+
+
+def test_lock_words_route_to_ritual():
+    # auto-start: a bare lock word with no active ritual must be treated as a ritual
+    # entry (is_ritual_trigger covers plan words; lock words are checked alongside it).
+    assert listener.is_lock_trigger("出發") and not listener.is_ritual_trigger("出發")
+    assert listener.is_lock_trigger("鎖定") and not listener.is_cart_trigger("鎖定")
+    assert not listener.is_approve_trigger("出發")  # 出發 ≠ cart approval
+
+
 def test_approve_trigger_detection():
     assert listener.is_approve_trigger("裝吧")
     assert listener.is_approve_trigger("全加,送出")
@@ -140,3 +162,18 @@ def test_format_understanding_injection_carries_text_and_guard():
 
 def test_format_understanding_injection_none_on_error():
     assert listener.format_understanding_injection("u", {"error": "quota"}) is None
+
+
+def test_plan_freshly_written_gates_on_mtime_not_filename(tmp_path):
+    # Bug 2026-06-14: auto-cart gated on plan filename == today, but plans are named for
+    # the week-START date (e.g. Mon 06-15) while the ritual runs Sun 06-14 → never matched.
+    import os, time as _t
+    plans = tmp_path / "plans"
+    plans.mkdir()
+    assert not listener.plan_freshly_written(plans)              # no plans → not fresh
+    p = plans / "2099-01-04.md"                                  # filename date ≠ today
+    p.write_text("# menu")
+    assert listener.plan_freshly_written(plans)                  # just written → fresh by mtime
+    old = _t.time() - 3600
+    os.utime(p, (old, old))
+    assert not listener.plan_freshly_written(plans)              # stale mtime → not fresh

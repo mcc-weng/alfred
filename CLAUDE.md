@@ -22,6 +22,12 @@ twenty-questions. (The project/repo name remains "Alfred".)
 - **Live daemon (v1.5):** `bash scripts/install_daemon.sh` (re)installs launchd jobs;
   logs in `.runtime/`. Chat with 小當家 in #小當家的廚房 anytime; say 「排菜單」 (or
   "plan the week") there to run the ritual via chat. Laptop ritual still works as fallback.
+  **Lock words** (「出發」/「鎖定」/"lock it") also auto-start the ritual — lock/plan intent
+  always routes to ritual mode (the only mode with Write/git/discord_io to lock + post).
+  Chat mode is read-only and must NEVER produce a final/lockable menu or advertise a lock
+  word (it has no tools to honor it → 240s timeout; the 2026-06-14 bug). After restarting
+  `listener.py`, kick the daemon: `launchctl kickstart -k gui/$(id -u)/com.alfred.listener`
+  (prompt `.md` edits are picked up live — `build_prompt` re-reads each call).
 - **Channel mapping:** #小當家的廚房 = key `alfred` · #本週菜單 = key `meal-plan`
   (Discord display names; IDs live in config.json — internal keys never change)
 - **Nudges:** daily 09:00 dinner reminder + Sunday 16:00 ritual prompt (silent
