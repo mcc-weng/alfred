@@ -110,6 +110,7 @@ chars — the poster auto-splits at 2000 on blank lines, so keep blank lines
 between sections.
 ```
 🍳 **{Day} — {菜名}**  ({mode} · 約{min}分 · 2人份)
+🔢 每份 ~{P}g 蛋白 · ~{kcal} kcal
 
 **🔪 備料(開火前全部完成 — mise en place)**
 - {食材 + 確切刀工與份量}(一行一項;蛋白質/蔬菜/醬料分組)
@@ -166,8 +167,8 @@ matching; fresh-asian items are listed for a human pickup, never auto-matched.
 ### Summary format
 ```
 📅 **The Week — {date range}**
-Mon · {dish} ({mode}, {min}m)
-Tue · {dish} ({mode}, {min}m)
+週一 · {dish} ({mode}, {min}分 · ~{P}P/{kcal}kcal)
+週二 · {dish} ({mode}, {min}分 · ~{P}P/{kcal}kcal)
 ...
 🛒 採買清單在上面 — 在 #小當家的廚房 跟我說「裝車」我就幫你配對商品、準備下單
 📖 每天早上我把當天的完整食譜傳到 #小當家的廚房 · 隨時把想吃的、好不好吃丟過來
@@ -179,8 +180,10 @@ lists the week at a glance; per-day recipes arrive via the morning nudge.)
 ## Step 7 — Save state
 - `state/plans/YYYY-MM-DD.md`: the locked week (dishes, modes, reasoning) + the
   shopping list
-- For each NEW dish: create `state/cookbook/<slug>.md` with the full recipe and
-  an empty `## Verdicts` section. Existing dishes: add `- planned YYYY-MM-DD`.
+- For each NEW dish: create `state/cookbook/<slug>.md` with the full recipe
+  (including the `🔢 每份 ~{P}g 蛋白 · ~{kcal} kcal` line under the title — estimate
+  per-serve protein+calories from the ingredients & portion) and an empty
+  `## Verdicts` section. Existing dishes: add `- planned YYYY-MM-DD`.
 - Log each `play` meal's technique to `state/skills.md` as 已排入; during Step 2
   verdict processing, advance statuses (cooked once → 初試; banger or second
   success → 熟練).
