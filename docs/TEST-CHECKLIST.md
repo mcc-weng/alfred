@@ -144,3 +144,14 @@ ritual/cart/nudge logic passed). Recorded here so they're not re-discovered:
 - **🔧 I can drive from my side:** the actual fill (touches the real cart — done sparingly, cleaned up), the nudge, simulated fail/login-expired paths.
 - **💬 Needs you in Discord:** anything through the live daemon — the ritual conversation, auto-chain in-channel, debounce/backfill, two-person flow, dish-photo critique. Can't be auto-looped (need real messages + side effects).
 - **🗓 Needs next week:** dark-wake, off-state, 9am contention, real pay, multi-week (no-repeat, skill progression, inbox→ritual reconciliation).
+
+## Ritual v2 — craving deck + nutrition + breakfast
+- [ ] N1 Deck: ritual TP1 posts 8 cards in blend 2🔁 + 2💭 + 3✨ + 1🥋, each with ~P/kcal
+- [ ] N2 Deck fallback: 0 cravings → 3🔁 + 4✨ + 1🥋; 1 craving → 2🔁 + 1💭 + 4✨ + 1🥋
+- [ ] N3 Deck honors allergies (none decked) + no last-2-weeks repeats
+- [ ] N4 Picks build the week; Step 5 proposal reflects 👍 picks; two-touchpoint preserved
+- [ ] N5 Nutrition: new recipe cards + summary lines + deck cards carry ~Pg/~kcal
+- [x] N6 Nutrition backfill: every state/cookbook/*.md has a 每份 line (done 2026-06-15, 19/19)
+- [ ] N7 Breakfast: weekly Woolies list grows a Breakfast group (deduped vs staples)
+- [ ] N8 Breakfast chat: 「今天早餐吃啥」 returns a suggestion from breakfasts.md
+- [ ] N9 Breakfast edit: 「早餐加 X」 → inbox preference 「早餐輪替:…」 → applied next ritual
