@@ -70,3 +70,21 @@ def test_plan_idempotent_by_date(monkeypatch, tmp_path):
     monkeypatch.setattr(prep.brain, "run_brain", lambda *a, **k: called.append(1) or "NOTHING")
     prep.plan()
     assert called == []  # existing today schedule → brain NOT called
+
+
+def test_tick_posts_due_then_marks_sent(monkeypatch, tmp_path):
+    sched_file = tmp_path / "prep_schedule.json"
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    sched = {"date": today, "cook_time": "18:30",
+             "items": [{"id": "a1", "due": f"{today}T00:00:00", "msg": "醃雞", "sent": False}]}
+    sched_file.write_text(json.dumps(sched))
+    monkeypatch.setattr(prep, "SCHED", sched_file)
+    posts = []
+    monkeypatch.setattr(prep.subprocess, "run", lambda *a, **k: posts.append(a))
+    prep.tick()
+    assert len(posts) == 1                       # posted once
+    after = json.loads(sched_file.read_text())
+    assert after["items"][0]["sent"] is True     # marked sent
+    posts.clear()
+    prep.tick()
+    assert posts == []                           # second run: no double-post

@@ -89,6 +89,32 @@ def plan(force: bool = False) -> None:
     print(f"prep: planned {len(items)} item(s) for {today}")
 
 
+def tick() -> None:
+    if not SCHED.exists():
+        return
+    try:
+        sched = json.loads(SCHED.read_text())
+    except (json.JSONDecodeError, OSError):
+        return
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    if sched.get("date") != today:
+        return  # stale (pre-plan window / post-midnight) → silent
+    due = due_items(sched, datetime.datetime.now(), GRACE_MIN)
+    if not due:
+        return
+    msg = "\n".join(it["msg"] for it in due)
+    subprocess.run(
+        [UV, "run", str(ROOT / "scripts" / "discord_io.py"),
+         "post", "--channel", "alfred", "--content", msg],
+        cwd=ROOT, check=True)
+    ids = {it["id"] for it in due}
+    for it in sched["items"]:
+        if it["id"] in ids:
+            it["sent"] = True
+    SCHED.write_text(json.dumps(sched, ensure_ascii=False, indent=2))
+    print(f"prep: posted {len(due)} reminder(s)")
+
+
 def main() -> None:
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "plan":
