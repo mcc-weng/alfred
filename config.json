@@ -10,5 +10,6 @@
   "chat_idle_minutes": 20,
   "ritual_timeout_hours": 3,
   "thresholds": {"woolies": 75, "asianpantry": 130},
-  "woolies_fulfillment": "delivery-trial"
+  "woolies_fulfillment": "delivery-trial",
+  "cook_time": "18:30"
 }
