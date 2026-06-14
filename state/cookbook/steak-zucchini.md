@@ -29,5 +29,7 @@
 — 小當家 🔥
 
 — planned 2026-06-07 (week of 6/8)
+— planned 2026-06-15
 
 ## Verdicts
+- 2026-06-10: 牛排很好吃 🔥 banger (icebear6149)

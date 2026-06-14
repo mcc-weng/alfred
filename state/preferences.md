@@ -10,7 +10,7 @@
 ## Dislikes (soft — avoid unless asked)
 - Mike: eggplant
 - Gf: coriander, celery, century egg (皮蛋)
-- Gf: fish — ONLY salmon is OK; prawns OK; other seafood unconfirmed
+- Gf: 不吃魚（所有魚類排除）— updated 2026-06-14; 蝦OK; other seafood unconfirmed
 
 ## Nutrition defaults
 - Every dinner anchored on a protein source, ~30–40 g/serve
