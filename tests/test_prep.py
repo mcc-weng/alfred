@@ -1,4 +1,5 @@
 import datetime
+import json
 import pathlib
 import sys
 
@@ -58,3 +59,14 @@ def test_due_items_skips_sent():
     sched["items"][0]["sent"] = True
     now = datetime.datetime(2026, 6, 15, 9, 0)
     assert prep.due_items(sched, now, 15) == []
+
+
+def test_plan_idempotent_by_date(monkeypatch, tmp_path):
+    sched_file = tmp_path / "prep_schedule.json"
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    sched_file.write_text(json.dumps({"date": today, "cook_time": "18:30", "items": []}))
+    monkeypatch.setattr(prep, "SCHED", sched_file)
+    called = []
+    monkeypatch.setattr(prep.brain, "run_brain", lambda *a, **k: called.append(1) or "NOTHING")
+    prep.plan()
+    assert called == []  # existing today schedule → brain NOT called

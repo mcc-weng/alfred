@@ -65,3 +65,39 @@ def due_items(schedule: dict, now: datetime.datetime, grace_min: int) -> list[di
         if not it["sent"] and now >= due - grace:
             out.append(it)
     return out
+
+
+def plan(force: bool = False) -> None:
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    if not force and SCHED.exists():
+        try:
+            if json.loads(SCHED.read_text()).get("date") == today:
+                print("prep: schedule already exists for today")
+                return
+        except (json.JSONDecodeError, OSError):
+            pass  # corrupt/unreadable → regenerate
+    cook_time = _config().get("cook_time", "18:30")
+    weekday = datetime.datetime.now().strftime("%A")
+    prompt = (ROOT / "prompts" / "prep.md").read_text() \
+        .replace("{today}", today).replace("{weekday}", weekday) \
+        .replace("{cook_time}", cook_time)
+    out = brain.run_brain("nudge", [], [], prompt_override=prompt)
+    items = parse_plan_output(out)
+    sched = build_schedule(today, cook_time, items)
+    SCHED.parent.mkdir(parents=True, exist_ok=True)
+    SCHED.write_text(json.dumps(sched, ensure_ascii=False, indent=2))
+    print(f"prep: planned {len(items)} item(s) for {today}")
+
+
+def main() -> None:
+    cmd = sys.argv[1] if len(sys.argv) > 1 else ""
+    if cmd == "plan":
+        plan(force="--force" in sys.argv)
+    elif cmd == "tick":
+        tick()
+    else:
+        sys.exit("usage: prep.py plan|tick")
+
+
+if __name__ == "__main__":
+    main()
