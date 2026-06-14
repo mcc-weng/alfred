@@ -1,4 +1,5 @@
 # Crispy-Skin Salmon, Teriyaki Glaze
+🔢 每份 ~35g 蛋白 · ~520 kcal
 
 play · ~35 min · serves 2 — planned 2026-06-07 · technique: crispy skin
 

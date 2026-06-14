@@ -1,4 +1,5 @@
 # Japanese Chicken Curry
+🔢 每份 ~31g 蛋白 · ~620 kcal
 
 batch ×2 · ~50 min · serves 4 — planned 2026-06-07
 

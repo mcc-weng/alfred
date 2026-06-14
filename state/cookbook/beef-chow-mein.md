@@ -1,4 +1,5 @@
 # Beef Chow Mein
+🔢 每份 ~40g 蛋白 · ~600 kcal
 
 fast · ~25 min · serves 2 — planned 2026-06-07
 

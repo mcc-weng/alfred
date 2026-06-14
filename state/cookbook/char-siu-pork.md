@@ -1,4 +1,5 @@
 # Char Siu Pork + Greens
+🔢 每份 ~40g 蛋白 · ~620 kcal
 
 play · ~1h + marinade · serves 2 + leftovers — planned 2026-06-07 · technique: glaze-basting roast
 

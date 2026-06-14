@@ -1,4 +1,5 @@
 # Garlic Prawn Spaghetti
+🔢 每份 ~28g 蛋白 · ~520 kcal
 
 fast · ~20 min · serves 2 — planned 2026-06-07
 

@@ -1,4 +1,5 @@
 # Honey-Soy Chicken Traybake
+🔢 每份 ~33g 蛋白 · ~520 kcal
 
 fast · ~30 min · serves 2 — planned 2026-06-07
 
