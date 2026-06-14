@@ -47,17 +47,34 @@ the matching `state/cookbook/<slug>.md` under `## Verdicts`:
 not a verdict; carry it as context for the proposal, don't create a file. Bangers
 become rotation candidates; "no repeat" verdicts are excluded from future plans.
 
-## Step 3 — Inventory & intent (Touchpoint 1) — FLEXIBLE START
-The week can start any way they like — meet them where they are. Accept any of:
-- **A fridge photo** → download (`curl -s -o /tmp/fridge.jpg "<attachment url>"`) + Read it.
-- **A text description** ("還有雞胸、青菜、豆腐;想吃清爽點") → just use it as the inventory + craving.
-- **Only cravings/ideas** ("這週想吃辣的、來點新菜") → plan from those + staples.
-- **Nothing / "隨便你"** → surprise them: plan from staples, cravings, rotation, the skill
-  curriculum; flag a likely mid-week top-up.
-Whatever they gave, list what you'll build around (perishables grouped veg/protein/dairy,
-plus their stated cravings/mood). Then ask ONE light question to fill the gap —
-e.g. *"冰箱還有什麼要先用掉的嗎?或這週有特別想吃/不想吃的?"* Don't insist on a photo,
-don't burn the touchpoint chasing inventory. The corrected snapshot is **ephemeral**:
+## Step 3 — Craving deck (Touchpoint 1)
+Open with a **craving deck**, not "what's in your fridge?" — present 8 numbered
+candidate dishes they react to. This kills the blank-page problem and injects
+novelty + skill progression. Build the deck (target 8) from these buckets:
+- 🔁 banger ×2 — cookbook dishes with 🔥/banger verdicts not cooked in ~4 weeks
+- 💭 craving ×(up to 2) — this week's harvested channel + inbox cravings
+- ✨ new ×3 — dishes NOT in the cookbook, fitting prefs (high-protein lean), genuinely novel
+- 🥋 challenge ×1 — the next technique from `state/skills.md` (a `play` dish, 已排入/候選)
+
+**Fallback** to keep the total at 8 when fewer than 2 cravings are saved this week:
+0 cravings → backfill +1 banger +1 new; 1 craving → backfill +1 new (favor novelty).
+First-ever / thin history (no bangers available) → fill entirely with new + challenge.
+
+**HARD rules for the deck:** never include an allergen dish; avoid dislikes unless
+explicitly requested; don't deck a dish cooked in the last 2 weeks unless it's a
+requested banger. If they already dropped cravings / a fridge photo / inventory in
+the channel, use it to seed the deck (their cravings → 💭 cards; inventory biases
+picks toward using up perishables). (Photo, if given: Discord mode = the local file
+path in the transcript → Read it; laptop = `curl -s -o /tmp/fridge.jpg "<url>"` then Read.)
+
+Each card is ONE line:
+`{n}. {bucket emoji} {菜名} · {mode} · ~{min}分 · ~{P}P/{kcal}kcal — {一句 hook}`
+(estimate new-dish macros on the fly). Post the deck as your reply, then **STOP**.
+If allergies are still unknown, append 「(對了,有什麼一定不能吃的嗎?)」 to this message.
+
+They reply with picks + optional vetoes + optional inventory, e.g.
+「1 4 6 想吃 · 3不要 · 還有雞胸要用掉」. Fridge inventory is OPTIONAL now — don't chase
+a photo, don't burn the touchpoint on it. Any snapshot they give stays **ephemeral**:
 use it for this plan, never save it.
 
 ## Step 4 — Read state before proposing
@@ -77,9 +94,11 @@ use it for this plan, never save it.
   know about?" into the Touchpoint 1 question — never propose before knowing.
 
 ## Step 5 — Propose the week (Touchpoint 2)
-Propose the COMPLETE week in one message, defaulting to 6 dinners — open with
-"Planned 6 dinners — say the word if this week needs fewer." Do NOT ask the count
-as a separate question.
+Build the week from the deck's 👍 picks FIRST, then fill the remaining dinner slots
+from staples/rotation/curriculum honoring the high-protein lean. Propose the
+COMPLETE week in one message, defaulting to 6 dinners — open with "Planned 6
+dinners — say the word if this week needs fewer." Do NOT ask the count as a
+separate question.
 Per dinner: **name · mode (fast/batch/play) · ~minutes · one-line reasoning**
 (what it uses up / whose craving / protein anchor / what technique it teaches).
 Default mix 3 fast + 1 batch + 2 play. Every dinner: protein ~30–40 g/serve.
