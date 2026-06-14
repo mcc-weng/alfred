@@ -155,3 +155,14 @@ ritual/cart/nudge logic passed). Recorded here so they're not re-discovered:
 - [ ] N7 Breakfast: weekly Woolies list grows a Breakfast group (deduped vs staples)
 - [ ] N8 Breakfast chat: 「今天早餐吃啥」 returns a suggestion from breakfasts.md
 - [ ] N9 Breakfast edit: 「早餐加 X」 → inbox preference 「早餐輪替:…」 → applied next ritual
+
+## Prep reminders + reproduce-with-swaps
+- [ ] PR1 plan: `prep.py plan --force` on a steak day → schedule has a ~17:50 回溫 item
+- [ ] PR2 plan: 醃-in-morning dish → 09:00 item; no-prep day → empty (smoke 2026-06-15: fast Mon skipped, tomorrow 三杯雞 → conditional 21:00 thaw item ✓)
+- [x] PR3 plan idempotent: second `plan` (no --force) same day → "already exists", brain not called (unit: test_plan_idempotent_by_date)
+- [x] PR4 tick: a due item posts once; second tick → no double-post (unit: test_tick_posts_due_then_marks_sent)
+- [ ] PR5 tick stale: schedule date != today → silent no-op
+- [ ] PR6 launchd: prep-plan + prep-tick loaded (✓ 2026-06-15); reminders arrive on a real cook day (pending)
+- [ ] SW1 swap: chat regenerates a named dish with a swap, flags changes, updates 每份
+- [ ] SW2 swap save=yes → ASCII-slug variant written, no craving queued
+- [ ] SW3 swap save=no → nothing written; locked week untouched
