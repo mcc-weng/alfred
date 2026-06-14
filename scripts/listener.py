@@ -292,10 +292,9 @@ class AlfredListener(discord.Client):
         except Exception:
             status = None
         if status == "approved":
-            # awake path: best-effort kick; fill_runner.sh is the real idempotency guard.
-            # (fill_runner.sh is created in v2b Task 2; until then this no-ops harmlessly.)
+            # awake path: best-effort kick; nightcrawler engine handles idempotency.
             await asyncio.create_subprocess_exec(
-                "bash", str(ROOT / "scripts" / "fill_runner.sh"),
+                "bash", "/Users/mikeweng/Projects/nightcrawler/engine/runner.sh", "alfred-fill",
                 stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
 
     async def _inject_recipe_context(self, lines: list[dict]) -> None:
