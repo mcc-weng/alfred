@@ -1,3 +1,4 @@
+import io
 import pathlib
 import sys
 
@@ -34,3 +35,27 @@ def test_cookbook_markdown_structure():
 def test_craving_note_points_at_cookbook():
     note = sr.craving_note("鮮奶麻糬甜湯", "milk-mochi-dessert-soup", "ball", "IG reel")
     assert note == "想做鮮奶麻糬甜湯 — 已存 cookbook/milk-mochi-dessert-soup.md (ball, IG reel)"
+
+
+def test_variant_skips_craving(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(sr.capture, "append_note", lambda *a, **k: calls.append(a))
+    monkeypatch.setattr(sr, "COOKBOOK", tmp_path)
+    monkeypatch.setattr(sys, "argv",
+        ["save_recipe.py", "--title", "T", "--slug", "t-variant",
+         "--source", "s", "--variant"])
+    monkeypatch.setattr(sys, "stdin", io.StringIO("body"))
+    sr.main()
+    assert calls == []                       # variant → NO craving queued
+    assert (tmp_path / "t-variant.md").exists()
+
+
+def test_nonvariant_queues_craving(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(sr.capture, "append_note", lambda *a, **k: calls.append(a))
+    monkeypatch.setattr(sr, "COOKBOOK", tmp_path)
+    monkeypatch.setattr(sys, "argv",
+        ["save_recipe.py", "--title", "T", "--slug", "t-normal", "--source", "s"])
+    monkeypatch.setattr(sys, "stdin", io.StringIO("body"))
+    sr.main()
+    assert len(calls) == 1                    # normal → craving queued

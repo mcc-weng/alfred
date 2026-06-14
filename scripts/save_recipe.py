@@ -55,6 +55,8 @@ def main() -> None:
     p.add_argument("--source", required=True)
     p.add_argument("--by", default="someone")
     p.add_argument("--kind", default="link")
+    p.add_argument("--variant", action="store_true",
+                   help="swapped-ingredient variant — skip queuing a craving")
     args = p.parse_args()
 
     slug = slugify(args.slug or args.title)
@@ -74,9 +76,12 @@ def main() -> None:
         cookbook_markdown(args.title, body, args.source, args.by, args.kind, date),
         encoding="utf-8",
     )
-    capture.append_note(INBOX, date, "craving",
-                        craving_note(args.title, slug, args.by, args.kind))
-    print(f"saved cookbook/{slug}.md + queued craving")
+    if not args.variant:
+        capture.append_note(INBOX, date, "craving",
+                            craving_note(args.title, slug, args.by, args.kind))
+        print(f"saved cookbook/{slug}.md + queued craving")
+    else:
+        print(f"saved cookbook/{slug}.md (variant — no craving)")
 
 
 if __name__ == "__main__":
