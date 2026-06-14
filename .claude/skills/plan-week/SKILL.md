@@ -33,7 +33,8 @@ From messages since the last plan (newest file in `state/plans/`), extract:
 it exists. Fold its lines into the harvest — verdict lines inform Step 2 cookbook
 updates; craving lines feed the proposal; preference/correction lines may warrant
 updating `state/preferences.md` and/or `state/woolworths.md` (handle these in
-Step 2 / Step 7 as appropriate); **lesson lines get filed into `state/lessons.md`
+Step 2 / Step 7 as appropriate); **preference lines prefixed 「早餐輪替:」 update
+`state/breakfasts.md`** (add/replace/remove a breakfast entry) in Step 7; **lesson lines get filed into `state/lessons.md`
 under the appropriate section** (技巧 for general technique tips, 這個廚房 for
 kitchen-specific quirks, 修正 for fixes that worked). 歸檔前先看該分類有沒有相近的心得;若有就就地更新/合併,不要重複新增(避免月積月累變雜訊)。(Do NOT clear it here — it
 is cleared in Step 8 after state is committed, so a mid-ritual error never loses
@@ -146,6 +147,8 @@ repeat dishes stay rich.)
 ...
 **Pantry**
 ...
+**Breakfast**
+- {recurring ingredients from state/breakfasts.md's active set, sized for the week}
 
 (staples assumed: see anything missing, shout)
 — 小當家 🔥
@@ -163,6 +166,13 @@ not sold online — 豬血, fresh 油條, live seafood → human Box Hill trip).
 unsure between woolies and asianpantry, prefer `[asianpantry]` for Asian-specific
 SKUs, `[woolies]` for everything mainstream. These tags drive `cart` mode's
 matching; fresh-asian items are listed for a human pickup, never auto-matched.
+
+**Breakfast provisioning:** Read `state/breakfasts.md`. List the active set's
+weekly-consumed ingredients under the **Breakfast** group (e.g. Greek yogurt, oats,
+berries, nuts, wholemeal bread, banana, peanut butter, whey protein, cottage
+cheese, chicken breast). **Dedupe** against `state/staples.md` (eggs, honey, butter
+are staples → omit) and against the dinner lines already on the list (don't double a
+protein). Tag `[woolies]`/`[asianpantry]` like any other line.
 
 ### Summary format
 ```
