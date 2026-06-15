@@ -20,8 +20,11 @@ guest、誤報「登入過期」(2026-06-14 的 bug)。**寧可延後重試,也�
    就是「真的」登入過期** → 跑
    `uv run scripts/discord_io.py post --channel alfred --content "🛒 Woolies 登入過期了,在 Brave 開一下登入(Brave 有存密碼,點一下就帶入),我下次再裝。"`
    然後印 `FILL: NOT_LOGGED_IN` 結束(pending.json 維持 approved 讓 retry 再試)。
-4. 對 woolies.items 的每一項,在頁面執行(stockcode/quantity 用該項的值):
-   `await fetch('/apis/ui/Trolley/Items',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({stockcode:<sc>,quantity:<qty>,source:'ProductDetail'})}).then(r=>r.status)`
+4. 對 woolies.items 的每一項,在頁面執行 — **stockcode 用該項的 `stockcode`,數量用該項的
+   `qty` 欄位**(schema 的欄位名是 **`qty`**,不是 `quantity`!讀錯會變成每項都只裝 1 —
+   2026-06-15 的 bug;只有真的沒有 `qty` 才當 1)。Woolies API body 的欄位名才是 `quantity`,
+   把該項 `qty` 的值放進去:
+   `await fetch('/apis/ui/Trolley/Items',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({stockcode:<item.stockcode>,quantity:<item.qty>,source:'ProductDetail'})}).then(r=>r.status)`
    記錄每一項的 HTTP 狀態碼,並依以下規則分類失敗:
    - **transient(暫時性)**:429 / 5xx / 網路錯誤 → 稍後重試可能成功
    - **permanent(永久性)**:其他 4xx(如 400、404)→ 商品下架或 stockcode 無效,重試無效
