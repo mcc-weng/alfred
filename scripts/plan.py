@@ -134,7 +134,9 @@ def _commit(path: pathlib.Path, sel_a: str, sel_b: str,
             pdate: datetime.date) -> None:
     msg = f"plan: swap {sel_a}↔{sel_b} (week of {pdate})"
     subprocess.run(["git", "-C", str(ROOT), "add", str(path)], check=True)
-    result = subprocess.run(["git", "-C", str(ROOT), "commit", "-m", msg])
+    # scope the commit to the plan file only — never sweep in pre-staged changes
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "commit", "-m", msg, "--", str(path)])
     if result.returncode not in (0, 1):   # 1 = nothing to commit; >1 = real error
         _die(f"git commit 失敗（rc={result.returncode}）")
 
