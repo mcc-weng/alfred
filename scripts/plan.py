@@ -43,7 +43,7 @@ def _resolve(rows: list[tuple[str, list[str]]], selector: str) -> int:
     """Index of the single row matching selector (weekday or dish substring)."""
     s = selector.strip().lower()
     hits = [i for i, (label, cells) in enumerate(rows)
-            if s and s in _haystack(label, cells[0])]
+            if s and s in _haystack(label, cells[0] if cells else "")]
     if not hits:
         raise ValueError(f"找不到符合「{selector}」的那一天")
     if len(hits) > 1:
@@ -78,13 +78,15 @@ def swap_text(text: str, sel_a: str, sel_b: str) -> str:
     lines[day_line_idx[ia]] = "| " + " | ".join([label_a] + content_b) + " |"
     lines[day_line_idx[ib]] = "| " + " | ".join([label_b] + content_a) + " |"
 
-    wd_a = re.search(r"週.", label_a).group()
-    wd_b = re.search(r"週.", label_b).group()
-    ra, rb = _reasoning_idx(lines, wd_a), _reasoning_idx(lines, wd_b)
-    if ra is not None and rb is not None:
-        text_a, text_b = _reasoning_text(lines[ra]), _reasoning_text(lines[rb])
-        lines[ra] = f"- {wd_a}: {text_b}"
-        lines[rb] = f"- {wd_b}: {text_a}"
+    m_a = re.search(r"週[一二三四五六日]", label_a)
+    m_b = re.search(r"週[一二三四五六日]", label_b)
+    if m_a and m_b:
+        wd_a, wd_b = m_a.group(), m_b.group()
+        ra, rb = _reasoning_idx(lines, wd_a), _reasoning_idx(lines, wd_b)
+        if ra is not None and rb is not None:
+            text_a, text_b = _reasoning_text(lines[ra]), _reasoning_text(lines[rb])
+            lines[ra] = f"- {wd_a}: {text_b}"
+            lines[rb] = f"- {wd_b}: {text_a}"
 
     return "\n".join(lines)
 
@@ -102,7 +104,7 @@ def plan_date(path: pathlib.Path) -> datetime.date:
 
 
 def _die(msg: str) -> None:
-    print(msg)
+    print(msg, file=sys.stderr)
     raise SystemExit(1)
 
 
@@ -132,7 +134,9 @@ def _commit(path: pathlib.Path, sel_a: str, sel_b: str,
             pdate: datetime.date) -> None:
     msg = f"plan: swap {sel_a}↔{sel_b} (week of {pdate})"
     subprocess.run(["git", "-C", str(ROOT), "add", str(path)], check=True)
-    subprocess.run(["git", "-C", str(ROOT), "commit", "-m", msg], check=True)
+    result = subprocess.run(["git", "-C", str(ROOT), "commit", "-m", msg])
+    if result.returncode not in (0, 1):   # 1 = nothing to commit; >1 = real error
+        _die(f"git commit 失敗（rc={result.returncode}）")
 
 
 def main() -> None:

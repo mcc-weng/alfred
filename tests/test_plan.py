@@ -43,8 +43,10 @@ def test_swap_leaves_other_days_untouched():
 def test_swap_exchanges_reasoning_bullets():
     out = plan.swap_text(PLAN, "週二", "週三")
     lines = out.split("\n")
-    r_tue = next(l for l in lines if l.startswith("- 週二:"))
-    r_wed = next(l for l in lines if l.startswith("- 週三:"))
+    r_tue = next((l for l in lines if l.startswith("- 週二:")), None)
+    r_wed = next((l for l in lines if l.startswith("- 週三:")), None)
+    assert r_tue is not None, "missing 週二 reasoning bullet after swap"
+    assert r_wed is not None, "missing 週三 reasoning bullet after swap"
     assert "牛排" in r_tue and "banger" in r_tue
     assert "三杯雞" in r_wed and "收汁" in r_wed
 
@@ -126,3 +128,39 @@ def test_main_unknown_command(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["plan.py", "frobnicate"])
     with pytest.raises(SystemExit):
         plan.main()
+
+
+def test_commit_real_git_error_raises(tmp_path, monkeypatch):
+    """_commit raises SystemExit when git commit returns rc > 1 (real error)."""
+    import subprocess as sp
+
+    call_count = [0]
+
+    def fake_run(cmd, **kwargs):
+        call_count[0] += 1
+        result = sp.CompletedProcess(cmd, returncode=0)
+        if "commit" in cmd:
+            result = sp.CompletedProcess(cmd, returncode=2)
+        return result
+
+    monkeypatch.setattr(plan.subprocess, "run", fake_run)
+    p = tmp_path / "2026-06-15.md"
+    p.write_text("x")
+    with pytest.raises(SystemExit):
+        plan._commit(p, "週二", "週三", datetime.date(2026, 6, 15))
+
+
+def test_commit_nothing_to_commit_does_not_raise(tmp_path, monkeypatch):
+    """_commit does NOT raise when git commit returns rc=1 (nothing to commit)."""
+    import subprocess as sp
+
+    def fake_run(cmd, **kwargs):
+        if "commit" in cmd:
+            return sp.CompletedProcess(cmd, returncode=1)
+        return sp.CompletedProcess(cmd, returncode=0)
+
+    monkeypatch.setattr(plan.subprocess, "run", fake_run)
+    p = tmp_path / "2026-06-15.md"
+    p.write_text("x")
+    # Should not raise
+    plan._commit(p, "週二", "週三", datetime.date(2026, 6, 15))
