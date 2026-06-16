@@ -24,7 +24,8 @@ CHAT_TOOLS = (
     "Read,Glob,WebFetch,"
     "Bash(uv run scripts/capture.py:*),"
     "Bash(uv run scripts/recipe_intake.py:*),"
-    "Bash(uv run scripts/save_recipe.py:*)"
+    "Bash(uv run scripts/save_recipe.py:*),"
+    "Bash(uv run scripts/plan.py:*)"
 )
 RITUAL_TOOLS = (
     "Read,Glob,Grep,Write,Edit,"

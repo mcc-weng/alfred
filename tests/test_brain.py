@@ -26,11 +26,12 @@ def test_mode_args_chat_is_readonly():
     tools = args[args.index("--allowedTools") + 1]
     # Chat must never have a general Write/Edit tool; it writes ONLY through vetted scripts.
     assert "Write" not in tools and "Edit" not in tools
-    # The only Bash scopes permitted are the three vetted recipe-intake / capture seams.
+    # The only Bash scopes permitted are the vetted recipe-intake / capture / plan seams.
     vetted = [
         "Bash(uv run scripts/capture.py:*)",
         "Bash(uv run scripts/recipe_intake.py:*)",
         "Bash(uv run scripts/save_recipe.py:*)",
+        "Bash(uv run scripts/plan.py:*)",
     ]
     for scope in vetted:
         assert scope in tools

@@ -59,6 +59,11 @@ twenty-questions. (The project/repo name remains "Alfred".)
   Install/refresh: `bash scripts/install_fill.sh` (rides iyf's 8:59 pmset wake — does NOT touch pmset).
 - **Feedback capture (chat):** chat appends verdicts/cravings/preferences to `state/inbox.md`
   via `scripts/capture.py` the moment they're said; the ritual reconciles + clears it.
+- **Day swap (chat):** say 「把週二跟週三對調」/「今晚改吃牛排」in #小當家的廚房 →
+  chat calls the vetted seam `scripts/plan.py swap <A> <B>` (weekday or dish name),
+  which swaps the two days' content + reasoning in the latest `state/plans/` file and
+  self-commits (`plan: swap …`). Swap-only; replace/add/remove still route to the
+  Sunday ritual via inbox. Design: `docs/superpowers/specs/2026-06-16-alfred-chat-day-swap-design.md`.
 - **Login:** the fill reuses the already-logged-in browser (lasts weeks). On expiry it pings
   「登入一下」 — Mike re-logs into his normal browser once. No scripted login (account-risk).
 
