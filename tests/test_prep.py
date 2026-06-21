@@ -75,10 +75,11 @@ def test_plan_idempotent_by_date(monkeypatch, tmp_path):
 def test_tick_posts_due_then_marks_sent(monkeypatch, tmp_path):
     sched_file = tmp_path / "prep_schedule.json"
     today = datetime.datetime.now().strftime("%Y-%m-%d")
-    sched = {"date": today, "cook_time": "18:30",
+    sched = {"date": today, "cook_time": "18:30", "plan_hash": "match",
              "items": [{"id": "a1", "due": f"{today}T00:00:00", "msg": "醃雞", "sent": False}]}
     sched_file.write_text(json.dumps(sched))
     monkeypatch.setattr(prep, "SCHED", sched_file)
+    monkeypatch.setattr(prep, "_plan_hash", lambda: "match")
     posts = []
     monkeypatch.setattr(prep.subprocess, "run", lambda *a, **k: posts.append(a))
     prep.tick()
@@ -88,3 +89,100 @@ def test_tick_posts_due_then_marks_sent(monkeypatch, tmp_path):
     posts.clear()
     prep.tick()
     assert posts == []                           # second run: no double-post
+
+
+# --- _plan_hash ---
+
+def test_plan_hash_empty_when_no_plans(tmp_path):
+    assert prep._plan_hash(plans_dir=tmp_path) == ""
+
+
+def test_plan_hash_returns_consistent_value(tmp_path):
+    (tmp_path / "2026-06-15.md").write_text("some plan content")
+    h = prep._plan_hash(plans_dir=tmp_path)
+    assert h != ""
+    assert prep._plan_hash(plans_dir=tmp_path) == h
+
+
+def test_plan_hash_changes_with_content(tmp_path):
+    p = tmp_path / "2026-06-15.md"
+    p.write_text("content A")
+    h1 = prep._plan_hash(plans_dir=tmp_path)
+    p.write_text("content B")
+    h2 = prep._plan_hash(plans_dir=tmp_path)
+    assert h1 != h2
+
+
+def test_plan_hash_picks_latest_file(tmp_path):
+    import hashlib
+    (tmp_path / "2026-06-07.md").write_text("old")
+    (tmp_path / "2026-06-15.md").write_text("new")
+    assert prep._plan_hash(plans_dir=tmp_path) == hashlib.sha1(b"new").hexdigest()
+
+
+# --- _replan ---
+
+def test_replan_marks_past_due_as_sent(monkeypatch, tmp_path):
+    sched_file = tmp_path / "prep_schedule.json"
+    monkeypatch.setattr(prep, "SCHED", sched_file)
+    monkeypatch.setattr(prep, "_plan_hash", lambda **_: "abc")
+    monkeypatch.setattr(prep, "_config", lambda: {"cook_time": "18:30"})
+    monkeypatch.setattr(prep.brain, "run_brain",
+                        lambda *a, **k: '[{"time":"09:00","msg":"morning prep"}]')
+    sched = prep._replan(datetime.datetime(2026, 6, 21, 16, 0))
+    assert sched is not None
+    assert sched["items"][0]["sent"] is True   # 09:00 item past at 16:00
+
+
+def test_replan_keeps_future_items_unsent(monkeypatch, tmp_path):
+    sched_file = tmp_path / "prep_schedule.json"
+    monkeypatch.setattr(prep, "SCHED", sched_file)
+    monkeypatch.setattr(prep, "_plan_hash", lambda **_: "abc")
+    monkeypatch.setattr(prep, "_config", lambda: {"cook_time": "18:30"})
+    monkeypatch.setattr(prep.brain, "run_brain",
+                        lambda *a, **k: '[{"time":"21:00","msg":"thaw steak"}]')
+    sched = prep._replan(datetime.datetime(2026, 6, 21, 16, 0))
+    assert sched is not None
+    assert sched["items"][0]["sent"] is False  # 21:00 item still future at 16:00
+
+
+def test_replan_returns_none_on_brain_failure(monkeypatch, tmp_path):
+    sched_file = tmp_path / "prep_schedule.json"
+    monkeypatch.setattr(prep, "SCHED", sched_file)
+    monkeypatch.setattr(prep, "_plan_hash", lambda **_: "abc")
+    monkeypatch.setattr(prep, "_config", lambda: {"cook_time": "18:30"})
+    monkeypatch.setattr(prep.brain, "run_brain",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("timeout")))
+    assert prep._replan(datetime.datetime(2026, 6, 21, 16, 0)) is None
+
+
+# --- tick replan integration ---
+
+def test_tick_replans_on_hash_mismatch(monkeypatch, tmp_path):
+    sched_file = tmp_path / "prep_schedule.json"
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    sched = {"date": today, "cook_time": "18:30", "plan_hash": "old",
+             "items": [{"id": "x1", "due": f"{today}T23:00:00",
+                        "msg": "wrong dish", "sent": False}]}
+    sched_file.write_text(json.dumps(sched))
+    monkeypatch.setattr(prep, "SCHED", sched_file)
+    monkeypatch.setattr(prep, "_plan_hash", lambda: "new")
+    replanned = []
+    monkeypatch.setattr(prep, "_replan",
+                        lambda now: replanned.append(now) or {"date": today, "items": []})
+    monkeypatch.setattr(prep.subprocess, "run", lambda *a, **k: None)
+    prep.tick()
+    assert replanned
+
+
+def test_tick_no_replan_when_hash_matches(monkeypatch, tmp_path):
+    sched_file = tmp_path / "prep_schedule.json"
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    sched = {"date": today, "cook_time": "18:30", "plan_hash": "same", "items": []}
+    sched_file.write_text(json.dumps(sched))
+    monkeypatch.setattr(prep, "SCHED", sched_file)
+    monkeypatch.setattr(prep, "_plan_hash", lambda: "same")
+    replanned = []
+    monkeypatch.setattr(prep, "_replan", lambda now: replanned.append(now))
+    prep.tick()
+    assert not replanned

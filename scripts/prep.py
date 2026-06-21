@@ -29,6 +29,15 @@ def _config() -> dict:
     return json.loads((ROOT / "config.json").read_text())
 
 
+def _plan_hash(plans_dir: pathlib.Path | None = None) -> str:
+    """SHA1 of the latest plan file; empty string if none exists."""
+    d = plans_dir if plans_dir is not None else ROOT / "state" / "plans"
+    dated = sorted(d.glob("[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md"))
+    if not dated:
+        return ""
+    return hashlib.sha1(dated[-1].read_bytes()).hexdigest()
+
+
 def item_id(msg: str) -> str:
     return hashlib.sha1(msg.encode("utf-8")).hexdigest()[:8]
 
@@ -84,9 +93,38 @@ def plan(force: bool = False) -> None:
     out = brain.run_brain("nudge", [], [], prompt_override=prompt)
     items = parse_plan_output(out)
     sched = build_schedule(today, cook_time, items)
+    sched["plan_hash"] = _plan_hash()
     SCHED.parent.mkdir(parents=True, exist_ok=True)
     SCHED.write_text(json.dumps(sched, ensure_ascii=False, indent=2))
     print(f"prep: planned {len(items)} item(s) for {today}")
+
+
+def _replan(now: datetime.datetime) -> dict | None:
+    """Rebuild today's schedule after a mid-day plan change.
+
+    Past-due items are auto-marked sent so they can never re-fire.
+    Returns the new schedule, or None if the brain call fails (skip this tick).
+    """
+    today = now.strftime("%Y-%m-%d")
+    cook_time = _config().get("cook_time", "18:30")
+    weekday = now.strftime("%A")
+    prompt = (ROOT / "prompts" / "prep.md").read_text() \
+        .replace("{today}", today).replace("{weekday}", weekday) \
+        .replace("{cook_time}", cook_time)
+    try:
+        out = brain.run_brain("nudge", [], [], prompt_override=prompt)
+    except Exception:
+        return None
+    items = parse_plan_output(out)
+    sched = build_schedule(today, cook_time, items)
+    sched["plan_hash"] = _plan_hash()
+    for item in sched["items"]:
+        if now >= datetime.datetime.fromisoformat(item["due"]):
+            item["sent"] = True
+    SCHED.write_text(json.dumps(sched, ensure_ascii=False, indent=2))
+    future = sum(1 for it in sched["items"] if not it["sent"])
+    print(f"prep: replanned after plan change ({future} future item(s))")
+    return sched
 
 
 def tick() -> None:
@@ -99,6 +137,10 @@ def tick() -> None:
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     if sched.get("date") != today:
         return  # stale (pre-plan window / post-midnight) → silent
+    if sched.get("plan_hash", "") != _plan_hash():
+        sched = _replan(datetime.datetime.now())
+        if sched is None:
+            return
     due = due_items(sched, datetime.datetime.now(), GRACE_MIN)
     if not due:
         return
